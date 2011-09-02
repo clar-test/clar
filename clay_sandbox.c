@@ -1,11 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "clay.h"
-
 #ifdef _WIN32
 #	define PLATFORM_SEP '\\'
 #else
@@ -68,12 +60,12 @@ static int clean_folder(const char *path)
 	return system(command);
 }
 
-int clay_unsandbox(void)
+static void clay_unsandbox(void)
 {
 	clean_folder(_clay_path);
 }
 
-int clay_sandbox(void)
+static int clay_sandbox(void)
 {
 	const char path_tail[] = "clay_tmp_XXXXXX";
 	size_t len;
