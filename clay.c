@@ -35,6 +35,9 @@ static struct {
 	struct clay_error *errors;
 	struct clay_error *last_error;
 
+	void (*local_cleanup)(void *);
+	void *local_cleanup_payload;
+
 	jmp_buf trampoline;
 	int trampoline_enabled;
 } _clay;
@@ -88,10 +91,18 @@ clay_run_test(
 		failed = 1;
 
 	_clay.trampoline_enabled = 0;
+
+	if (_clay.local_cleanup != NULL)
+		_clay.local_cleanup(_clay.local_cleanup_payload);
+
 	if (cleanup->ptr != NULL)
 		cleanup->ptr();
 
 	_clay.test_count++;
+
+	/* remove any local-set cleanup methods */
+	_clay.local_cleanup = NULL;
+	_clay.local_cleanup_payload = NULL;
 
 	clay_print("%c", failed ? 'F' : '.');
 }
@@ -296,4 +307,10 @@ clay__assert(
 	}
 
 	longjmp(_clay.trampoline, -1);
+}
+
+void clay_set_cleanup(void (*cleanup)(void *), void *opaque)
+{
+	_clay.local_cleanup = cleanup;
+	_clay.local_cleanup_payload = opaque;
 }
