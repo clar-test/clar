@@ -8,9 +8,6 @@ VERSION = "0.3.0"
 
 TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\(\s*(void)?\s*\))\s*\{"
 
-CLAY_FILE_CORE = r"""abcd"""
-CLAY_FILE_HEADER = r"""header"""
-
 TEMPLATE_MAIN = Template(
 r"""
 /*
@@ -21,9 +18,9 @@ r"""
  * file with `./clay`
  */
 
-${clay_core}
+#define clay_print(...) ${clay_print}
 
-${clay_sandbox}
+${clay_library}
 
 ${extern_declarations}
 
@@ -33,10 +30,12 @@ static const struct clay_suite _all_suites[] = {
 	${test_suites}
 };
 
+static const char _suites_str[] = "${suites_str}";
+
 int main(int argc, char *argv[])
 {
 	return clay_test(
-		argc, argv, _all_suites,
+		argc, argv, _suites_str, _all_suites,
 		sizeof(_all_suites)/sizeof(_all_suites[0]));
 }
 """)
@@ -59,21 +58,37 @@ r"""
 	}
 """)
 
+def main():
+	from optparse import OptionParser
+
+	parser = OptionParser()
+
+	parser.add_option('-c', '--clay-path', dest='clay_path')
+	parser.add_option('-o', '--output', dest='output')
+	parser.add_option('-v', '--report-to', dest='print_mode', default='stdout')
+
+	options, args = parser.parse_args()
+
+	for folder in args:
+		builder = ClayTestBuilder(folder,
+			clay_path = options.clay_path,
+			output = options.output,
+			print_mode = options.print_mode)
+
+		builder.render()
+
+
 class ClayTestBuilder:
-	def __init__(self, folder_name, clay_path = None):
+	def __init__(self, folder_name, output = None, clay_path = None, print_mode = 'stdout'):
 		self.declarations = []
 		self.callbacks = []
 		self.suites = {}
 
-		self.clay_path = clay_path or os.path.join(folder_name, "clay")
-		self.output = os.path.join(folder_name, "clay_main.c")
+		self.clay_path = clay_path
+		self.print_mode = print_mode
+		self.output = output or os.path.join(folder_name, "clay_main.c")
 
-		if not os.path.exists(self.clay_path) or not \
-			os.path.exists(os.path.join(self.clay_path, "clay.h")):
-			raise Exception(
-				"The `clay` folder could not be found. "
-				"Clay sources are expected to be in a subfolder "
-				"under your test suite folder.")
+		self.modules = ["clay.c", "clay_sandbox.c"]
 
 		self.test_files = []
 
@@ -83,25 +98,63 @@ class ClayTestBuilder:
 				if self._process_test_file(fname, f.read()):
 					self.test_files.append(fname)
 
-	def _load_file(self, filename):
-		filename = os.path.join(self.clay_path, filename)
-		with open(filename) as cfile:
-			return cfile.read()
-
 	def render(self):
 		template = TEMPLATE_MAIN.substitute(
-			clay_core = self._load_file("clay.c"),
-			clay_sandbox = self._load_file("clay_sandbox.c"),
+			clay_print = self._get_print_method(),
+			clay_library = self._get_library(),
 			extern_declarations = "\n".join(self.declarations),
 			test_callbacks = "\n".join(self.callbacks),
 			test_suites = ",\n\t".join(self.suites.values()),
-			version = VERSION
+			version = VERSION,
+			suites_str = ', '.join(self.test_files)
 		)
 
 		with open(self.output, "w") as out:
 			out.write(template)
 			print ('Written test suite to "%s"' % self.output)
-			print ('Suite file list: [%s]' % ", ".join(["clay_main.c"] + self.test_files))
+			print ('Suite file list: [%s]' % ", ".join(
+				[os.path.basename(self.output)] + self.test_files)
+			)
+
+	#####################################################
+	# Internal methods
+	#####################################################
+
+	def _get_print_method(self):
+		return {
+			'stdout' : 'printf(__VA_ARGS__)',
+			'stderr' : 'fprintf(stderr, __VA_ARGS__)',
+			'silent' : ''
+		}[self.print_mode]
+
+	def _load_file(self, filename):
+		if self.clay_path:
+			filename = os.path.join(self.clay_path, filename)
+			with open(filename) as cfile:
+				return cfile.read()
+		else:
+			import zlib, base64, sys
+			content = CLAY_FILES[filename]
+
+			if sys.version_info >= (3, 0):
+				content = bytearray(content, 'utf_8')
+				content = base64.b64decode(content)
+				content = zlib.decompress(content)
+				return str(content)
+			else:
+				content = base64.b64decode(content)
+				return zlib.decompress(content)
+
+	def _get_library(self):
+		return "\n".join(self._load_file(f) for f in self.modules)
+
+	def _parse_comment(self, comment):
+		comment = comment[2:-2]
+		comment = comment.splitlines()
+		comment = [line.strip() for line in comment]
+		comment = "\n".join(comment)
+
+		return comment
 
 	def _cleanup_name(self, name):
 		words = name.split("_")
@@ -119,8 +172,8 @@ class ClayTestBuilder:
 		for (declaration, symbol, short_name, _) in regex.findall(contents):
 			self.declarations.append("extern %s;" % declaration)
 
-			callbacks[short_name] = '{"%s [%s]", &%s}' % (
-				self._cleanup_name(short_name), symbol, symbol
+			callbacks[short_name] = '{"%s", &%s}' % (
+				short_name, symbol
 			)
 
 		initialize = callbacks.pop("initialize", "NULL")
@@ -144,6 +197,11 @@ class ClayTestBuilder:
 
 		return True
 
+CLAY_FILES = {
+"clay.c" : r"""eJzFV0mT2kYUPku/4hlXZiQQDORoDMecXDnFp7FL1UjN0IloEak1NY7Nf8/rVa2NcZYqn0BvX773uvst41nR5BTek7qmlVid9uFbR6up+P186dFEXrDDgMbKPqli/KlLOxNxkpTwYQ4V/bNhFc3hWFZQE54fyhdUgPmDb+RL/VAL0ouq4QwdKkOOOMsK8mV1moUhOm4yAfI7pVWF1r+GQVbyGmknUsFc0Fpsw4BxAfJvypvzgVbbrlDdMEF7tCMrqFEsGKfjispleq6fJF1RclpnFbsIVvJtGAbD+OacvmBE160MngiWgZHpBU4ywZ5pauIf4ZigdYjqQ3uobbqlIIUjeSXIyoaLieCchRFeQVBZ/ZfKCJX00BxBVOR8KWWJrF9HSCknh4LmKH6FVJmSKTf1ttu4Y8OzfvqcnKXB55LlEM0voooj+T+2lWu1VeoT6gMvjDPBSMH+GuVmBSW8ubh6DwQUnFR50ELaraeMC6H+S1WeTWAa56tMwtz0WuWjuA03fJuXkZAl9NUtu2N7wmbVcAWY6HYCyTS7rc8NIVOmuIWwC9p4l9+kesoS0445fjyPWtTd0xNYJ2Dqqkrq2e+mqIRHc/StSXVfP/wRJQoRlz7yV8PpgB1s1HweIdIrOJrQiGG3g3Ussa6k20iWe5wQeLODXz9++BAjO+jxIlmNIJCpue/gGn5PcOutjs2kNHDl07Wbrk03IosFDslES3RLX2lo+PV20zBYJbjc98aUDaLyd2irZrZGR9LfrLoaYSBPsYipL2Dw3vdqtgEsFkw3asytCVb+PLLPK+M26AL0zrATuDP2PeQ5WjuLI+30TgBY7GAyrxt9wVO6oJE7O1j+j6dYdq3twyvKY9XtV9Q2TZegxhIpbKv56TcC9jZuNRWHipI/3CQgFZa7ke7pWqoRkyOnLX37Zk1hTGv/cz9iQ4d6vOC9SBwjvMFgpROY/SY7r68S8FMOeUlr4KUA+oK3HCg5iBPVxlaf+CxxwUt4oIyIlpvRVg9R+m/x3oWoP0+PJhgL2LAP2FHh74Xvf8Kudw6F//85hAjWaHjTOZhjCamKiqbisHQrXLpD1G3MmuZm+7So3mhUSzkP1Ob6iNTmTLksvQxVYTsIAm/+lDHrSck+rj9LlN4v7+HuDhx1o6niXiHfAX4n0xZl4dRhAT9jQ+xnApt13DppI8KVf/9pbax10vY2l9kXdleArac90AOEbnAFWtRUz7K3oF8d/Btt662DTkjqaKmdc4vb9gKm0jUZTYJQ4axdjql+QRmMYWA5k3f+ZPiISNpHRDLxeujRvTeE3p4T93QLOee9BaRkaVFcX6QoyizaaFSXchv17MWxNdVJ366T9qwfZUMnmI5I+2TwbwwTIriP8Gnk25uy5YkYTbOupjbZtiNo3nJ9+c4BYMTtwpxcpq2o7DVKmnejIXpPR+SZV5LhufbbfPRDUpfRw4BfOqPqc9VA583FVxnuU39lyouYWWivXP9GTzE5XbOP/ITTI2+I9CWjyuk7IPYFBWcqTmUOFWE1ihDeSq1mY4dZUfKnGzffBJToNfwbC1aiWA==""",
+"clay_sandbox.c" : r"""eJx1VG1P2zAQ/uz8iiPVIFmzETa0acv6YRJlqii0akFsopUVEgesJU4Xu9XY4L/vHKd5KayKGsf33N3znO/c40nMEqDXo4v376wewQ8uGEzHXy9PJ7NzOh9O4WCxOLB6LJXsf4BDbRcxTyxLqlDxCKL7sAAapeEDXYXq/ubY//RhGdRmLpTFJd2EKY+pylYlyIlyIZVxfa03XOuvRaQq1pEC7Yh/gUUKptaFACfVW47GebAvlQuDAfiwv28R4szpaH4ymjlSvZWKZnnMXHh8RIs2jC/O2gbX+IRRxKSs4l3TyZkJ6AbWU4c2ym9TLsnerpOEFR5I/odRBSkTdzV7U45SWWXehAWN8rVQMIDjYAdjAjKxweIU8maJGAxD7MvzKQqyPdCr8jU076v5cDadTU5H46FtAXnCIgOpMnH86HVOmPAEnG9MXbJsNdUCnJPryezENZQ9MEpcF1NWdT4K6rMlSV6Aw5GSHwCHL42SAPp97pZMd2Qg+I4pXDi1Jr7EopKSyR5u6lzaS3GxZkjYWJ53h4aaFLonRLR6cLZ1R5O3rboO3eJOyJOFT902/s55QpSyUNAkT2NWvNyBrc1c0iiL9ans1pXYRQyHEg5/wcJ+JRe2HVQzo00ZvCmStqEqaBk0yrMsFPF2RogUqwKZJU5lMH2V19+uV/HwoOSILpWDPf8x/wyYRGBnbNHNyMgHqVjmNIamEpucx1CO61pINN7mvx29ZwrQLlEz1LujYfyfezfl015UhTwt+9ou8fp8v5c/W2uvJ0h3Qtki3YFr0tdlaTFqN66vI2AgzIT9gosudRO9dUVp6Bs4WsLeoHO9mZ7rAvt9LaCNCkyXYSbdmA0a+lqM10ivU2c/8TBWbVL6wrm4Go93RRh0zIuOev+j77uarP8SPrrv4l9GNnOC5P8Bn93d6w==""",
+"clay.h" : r"""eJyF0cFKAzEQBuBz8xRjc+nKIp5rLYhssbB4sRdPw5pM6EBIliQr9e1NVpFuS+1t+DPMN0MkG6fJAOJz+/SOu+Zthy+IQuaQHZ3lQrJTdtAEq5i05Y+7/VqIT88alO2+ELsYKaSFmLFLoLzTnNi7WsxyHXOy7wLcGrZU/7TYrJy8Ugg+nGSaogrcl1nVg/hbbzT7bC7o0IcaSls13WR8qWD9CPd1PmezbRvEUrXb17GabwanymBQnbVgurycXsIc5NHMqVh6roqri2Bz6Ekl0mAmcvIj/j/9a1zDby6fm/VAMRaWIzifIIWBzlQhKX+eEd+GwbJD"""
+}
+
 if __name__ == '__main__':
-	builder = ClayTestBuilder('.', '.')
-	builder.render()
+	main()

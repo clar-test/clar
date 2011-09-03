@@ -56,7 +56,6 @@ static int clean_folder(const char *path)
 
 	char command[4096];
 	snprintf(command, sizeof(command), os_cmd, path);
-	printf("SYS: %s\n", command);
 	return system(command);
 }
 
