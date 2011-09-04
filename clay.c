@@ -45,6 +45,7 @@ static struct {
 struct clay_func {
 	const char *name;
 	void (*ptr)(void);
+	size_t suite_n;
 };
 
 struct clay_suite {
@@ -59,26 +60,13 @@ struct clay_suite {
 static void clay_unsandbox(void);
 static int clay_sandbox(void);
 
-/* From clay.c */
-static void clay_run_test(
-	const struct clay_func *test,
-	const struct clay_func *initialize,
-	const struct clay_func *cleanup);
-
-static int clay_test(
-	int argc, char **argv, const char *all_suites,
-	const struct clay_suite *suites, size_t count);
-
-static void clay_run_suite(
-	const struct clay_suite *suite);
-
 static void
 clay_run_test(
 	const struct clay_func *test,
 	const struct clay_func *initialize,
 	const struct clay_func *cleanup)
 {
-	int failed = 0;
+	int error_st = _clay.suite_errors;
 
 	_clay.trampoline_enabled = 1;
 
@@ -87,8 +75,7 @@ clay_run_test(
 			initialize->ptr();
 
 		test->ptr();
-	} else
-		failed = 1;
+	}
 
 	_clay.trampoline_enabled = 0;
 
@@ -104,7 +91,7 @@ clay_run_test(
 	_clay.local_cleanup = NULL;
 	_clay.local_cleanup_payload = NULL;
 
-	clay_print("%c", failed ? 'F' : '.');
+	clay_print("%c", (_clay.suite_errors > error_st) ? 'F' : '.');
 }
 
 static void
@@ -112,9 +99,10 @@ clay_print_error(int num, const struct clay_error *error)
 {
 	clay_print("  %d) Failure:\n", num);
 
-	clay_print("\"%s\" (%s) [%s:%d] [-t%d]\n",
-		error->test,
+	clay_print("%s::%s (%s) [%s:%d] [-t%d]\n",
 		error->suite,
+		error->test,
+		"no description",
 		error->file,
 		error->line_number,
 		error->test_number);
@@ -132,8 +120,6 @@ clay_report_errors(void)
 {
 	int i = 1;
 	struct clay_error *error, *next;
-
-	_clay.total_errors += _clay.suite_errors;
 
 	error = _clay.errors;
 	while (error != NULL) {
@@ -161,31 +147,14 @@ clay_run_suite(const struct clay_suite *suite)
 }
 
 static void
-clay_run_single(int test_id,
-	const struct clay_suite *suites, size_t count)
+clay_run_single(const struct clay_func *test,
+	const struct clay_suite *suite)
 {
-	size_t i;
-	const struct clay_suite *suite;
-
-	for (i = 0; i < count; ++i) {
-		suite = &suites[i];
-
-		if (suite->test_count > test_id)
-			break;
-
-		test_id -= suite->test_count;
-	}
-
-	if (i == count || test_id < 0 || test_id >= suite->test_count) {
-		fprintf(stderr, "Test number %d does not exist.\n", test_id);
-		exit(-1);
-	}
-
 	_clay.suite_errors = 0;
 	_clay.active_suite = suite->name;
-	_clay.active_test = suite->tests[test_id].name;
+	_clay.active_test = test->name;
 
-	clay_run_test(&suite->tests[test_id], &suite->initialize, &suite->cleanup);
+	clay_run_test(test, &suite->initialize, &suite->cleanup);
 }
 
 static int
@@ -197,11 +166,14 @@ clay_usage(void)
 static void
 clay_parse_args(
 	int argc, char **argv,
-	const struct clay_suite *suites, size_t count)
+	const struct clay_func *callbacks,
+	size_t cb_count,
+	const struct clay_suite *suites,
+	size_t suite_count)
 {
 	int i;
 
-	for (i = 1; i < argc; ++i) {
+	for (i = 0; i < argc; ++i) {
 		char *argument = argv[i];
 		char action;
 		int num;
@@ -212,20 +184,30 @@ clay_parse_args(
 		action = argument[1];
 		num = strtol(argument + 2, &argument, 10);
 
-		if (*argument != '\0')
+		if (*argument != '\0' || num < 0)
 			clay_usage();
 
 		switch (action) {
 		case 't':
-			clay_run_single(num, suites, count);
+			if ((size_t)num >= cb_count) {
+				fprintf(stderr, "Test number %d does not exist.\n", num);
+				exit(-1);
+			}
+
+			clay_print("Started (%s::%s)\n",
+				suites[callbacks[num].suite_n].name,
+				callbacks[num].name);
+
+			clay_run_single(&callbacks[num], &suites[callbacks[num].suite_n]);
 			break;
 
 		case 's':
-			if (num >= (int)count || num < 0) {
+			if ((size_t)num >= suite_count) {
 				fprintf(stderr, "Suite number %d does not exist.\n", num);
 				exit(-1);
 			}
 
+			clay_print("Started (%s::)\n", suites[num].name);
 			clay_run_suite(&suites[num]);
 			break;
 
@@ -237,22 +219,27 @@ clay_parse_args(
 
 static int
 clay_test(
-	int argc, char **argv, const char *all_suites,
-	const struct clay_suite *suites, size_t count)
+	int argc, char **argv,
+	const char *suites_str,
+	const struct clay_func *callbacks,
+	size_t cb_count,
+	const struct clay_suite *suites,
+	size_t suite_count)
 {
-	clay_print("Loaded %d suites: %s\n", (int)count, all_suites);
+	clay_print("Loaded %d suites: %s\n", (int)suite_count, suites_str);
 
 	if (!clay_sandbox())
 		return -1;
 
-	clay_print("Started\n");
-
 	if (argc > 1) {
-		clay_parse_args(argc - 1, argv + 1, suites, count);
+		clay_parse_args(argc - 1, argv + 1,
+			callbacks, cb_count, suites, suite_count);
+
 	} else {
 		size_t i;
+		clay_print("Started\n");
 
-		for (i = 0; i < count; ++i) {
+		for (i = 0; i < suite_count; ++i) {
 			const struct clay_suite *s = &suites[i];
 			clay_run_suite(s);
 		}
@@ -271,7 +258,8 @@ clay__assert(
 	const char *file,
 	int line,
 	const char *error_msg,
-	const char *description)
+	const char *description,
+	int should_abort)
 {
 	struct clay_error *error;
 
@@ -299,14 +287,17 @@ clay__assert(
 		error->description = strdup(description);
 
 	_clay.suite_errors++;
+	_clay.total_errors++;
 
-	if (!_clay.trampoline_enabled) {
-		fprintf(stderr,
-			"Unhandled exception: a cleanup method raised an exception.");
-		exit(-1);
+	if (should_abort) {
+		if (!_clay.trampoline_enabled) {
+			fprintf(stderr,
+				"Unhandled exception: a cleanup method raised an exception.");
+			exit(-1);
+		}
+
+		longjmp(_clay.trampoline, -1);
 	}
-
-	longjmp(_clay.trampoline, -1);
 }
 
 void clay_set_cleanup(void (*cleanup)(void *), void *opaque)

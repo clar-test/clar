@@ -4,7 +4,7 @@ from __future__ import with_statement
 from string import Template
 import re, fnmatch, os
 
-VERSION = "0.3.0"
+VERSION = "0.7.0"
 
 TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\(\s*(void)?\s*\))\s*\{"
 
@@ -24,191 +24,190 @@ ${clay_library}
 
 ${extern_declarations}
 
-${test_callbacks}
+static const struct clay_func _all_callbacks[] = {
+    ${test_callbacks}
+};
 
 static const struct clay_suite _all_suites[] = {
-	${test_suites}
+    ${test_suites}
 };
 
 static const char _suites_str[] = "${suites_str}";
 
 int main(int argc, char *argv[])
 {
-	return clay_test(
-		argc, argv, _suites_str, _all_suites,
-		sizeof(_all_suites)/sizeof(_all_suites[0]));
+    return clay_test(
+        argc, argv, _suites_str,
+        _all_callbacks, ${cb_count},
+        _all_suites, ${suite_count}
+    );
 }
-""")
-
-TEMPLATE_CALLBACKS = Template(
-r"""
-static const struct clay_func _${suite_name}_tests[] = {
-	${callbacks}
-};
 """)
 
 TEMPLATE_SUITE = Template(
 r"""
-	{
-		"${clean_name}",
-		${initialize},
-		${cleanup},
-		_${suite_name}_tests,
-		${test_count}
-	}
+    {
+        "${clean_name}",
+        ${initialize},
+        ${cleanup},
+        ${cb_ptr}, ${cb_count}
+    }
 """)
 
 def main():
-	from optparse import OptionParser
+    from optparse import OptionParser
 
-	parser = OptionParser()
+    parser = OptionParser()
 
-	parser.add_option('-c', '--clay-path', dest='clay_path')
-	parser.add_option('-o', '--output', dest='output')
-	parser.add_option('-v', '--report-to', dest='print_mode', default='stdout')
+    parser.add_option('-c', '--clay-path', dest='clay_path')
+    parser.add_option('-o', '--output', dest='output')
+    parser.add_option('-v', '--report-to', dest='print_mode', default='stdout')
 
-	options, args = parser.parse_args()
+    options, args = parser.parse_args()
 
-	for folder in args:
-		builder = ClayTestBuilder(folder,
-			clay_path = options.clay_path,
-			output = options.output,
-			print_mode = options.print_mode)
+    for folder in args:
+        builder = ClayTestBuilder(folder,
+            clay_path = options.clay_path,
+            output = options.output,
+            print_mode = options.print_mode)
 
-		builder.render()
+        builder.render()
 
 
 class ClayTestBuilder:
-	def __init__(self, folder_name, output = None, clay_path = None, print_mode = 'stdout'):
-		self.declarations = []
-		self.callbacks = []
-		self.suites = {}
+    def __init__(self, folder_name, output = None, clay_path = None, print_mode = 'stdout'):
+        self.declarations = []
+        self.callbacks = []
+        self.suites = []
+        self.suite_list = []
 
-		self.clay_path = clay_path
-		self.print_mode = print_mode
-		self.output = output or os.path.join(folder_name, "clay_main.c")
-		self.output_header = os.path.join(folder_name, "clay.h")
+        self.clay_path = clay_path
+        self.print_mode = print_mode
+        self.output = output or os.path.join(folder_name, "clay_main.c")
+        self.output_header = os.path.join(folder_name, "clay.h")
 
-		self.modules = ["clay.c", "clay_sandbox.c"]
+        self.modules = ["clay.c", "clay_sandbox.c"]
 
-		self.test_files = []
+        print("Loading test suites...")
 
-		file_list = os.listdir(folder_name)
-		for fname in fnmatch.filter(file_list, "*.c"):
-			with open(fname) as f:
-				if self._process_test_file(fname, f.read()):
-					self.test_files.append(fname)
+        file_list = os.listdir(folder_name)
+        for fname in fnmatch.filter(file_list, "*.c"):
+            with open(fname) as f:
+                tcount = self._process_test_file(fname, f.read())
+                if tcount:
+                    print ("  %s: %d tests" % (fname, tcount))
 
-	def render(self):
-		template = TEMPLATE_MAIN.substitute(
-			clay_print = self._get_print_method(),
-			clay_library = self._get_library(),
-			extern_declarations = "\n".join(self.declarations),
-			test_callbacks = "\n".join(self.callbacks),
-			test_suites = ",\n\t".join(self.suites.values()),
-			version = VERSION,
-			suites_str = ', '.join(self.test_files)
-		)
+    def render(self):
+        template = TEMPLATE_MAIN.substitute(
+            version = VERSION,
+            clay_print = self._get_print_method(),
+            clay_library = self._get_library(),
+            extern_declarations = "\n".join(self.declarations),
 
-		with open(self.output, "w") as out:
-			out.write(template)
-			print ('Written test suite to "%s"' % self.output)
-			print ('Suite file list: [%s]' % ", ".join(
-				[os.path.basename(self.output)] + self.test_files)
-			)
+            suites_str = ", ".join(self.suite_list),
 
-		with open(self.output_header, "w") as out:
-			out.write(self._load_file('clay.h'))
+            test_callbacks = ",\n\t".join(self.callbacks),
+            cb_count = len(self.callbacks),
 
-	#####################################################
-	# Internal methods
-	#####################################################
+            test_suites = ",\n\t".join(self.suites),
+            suite_count = len(self.suites),
+        )
 
-	def _get_print_method(self):
-		return {
-			'stdout' : 'printf(__VA_ARGS__)',
-			'stderr' : 'fprintf(stderr, __VA_ARGS__)',
-			'silent' : ''
-		}[self.print_mode]
+        with open(self.output, "w") as out:
+            out.write(template)
 
-	def _load_file(self, filename):
-		if self.clay_path:
-			filename = os.path.join(self.clay_path, filename)
-			with open(filename) as cfile:
-				return cfile.read()
-		else:
-			import zlib, base64, sys
-			content = CLAY_FILES[filename]
+        with open(self.output_header, "w") as out:
+            out.write(self._load_file('clay.h'))
 
-			if sys.version_info >= (3, 0):
-				content = bytearray(content, 'utf_8')
-				content = base64.b64decode(content)
-				content = zlib.decompress(content)
-				return str(content)
-			else:
-				content = base64.b64decode(content)
-				return zlib.decompress(content)
+        print ('Written test suite to "%s"' % self.output)
+        print ('Written header to "%s"' % self.output_header)
 
-	def _get_library(self):
-		return "\n".join(self._load_file(f) for f in self.modules)
+    #####################################################
+    # Internal methods
+    #####################################################
+    def _get_print_method(self):
+        return {
+                'stdout' : 'printf(__VA_ARGS__)',
+                'stderr' : 'fprintf(stderr, __VA_ARGS__)',
+                'silent' : ''
+        }[self.print_mode]
 
-	def _parse_comment(self, comment):
-		comment = comment[2:-2]
-		comment = comment.splitlines()
-		comment = [line.strip() for line in comment]
-		comment = "\n".join(comment)
+    def _load_file(self, filename):
+        if self.clay_path:
+            filename = os.path.join(self.clay_path, filename)
+            with open(filename) as cfile:
+                return cfile.read()
 
-		return comment
+        else:
+            import zlib, base64, sys
+            content = CLAY_FILES[filename]
 
-	def _cleanup_name(self, name):
-		words = name.split("_")
-		return " ".join(words).capitalize()
+            if sys.version_info >= (3, 0):
+                content = bytearray(content, 'utf_8')
+                content = base64.b64decode(content)
+                content = zlib.decompress(content)
+                return str(content)
+            else:
+                content = base64.b64decode(content)
+                return zlib.decompress(content)
 
-	def _process_test_file(self, file_name, contents):
-		file_name = os.path.basename(file_name)
-		file_name, _ = os.path.splitext(file_name)
+    def _get_library(self):
+        return "\n".join(self._load_file(f) for f in self.modules)
 
-		regex_string = TEST_FUNC_REGEX % file_name
-		regex = re.compile(regex_string, re.MULTILINE)
+    def _parse_comment(self, comment):
+        comment = comment[2:-2]
+        comment = comment.splitlines()
+        comment = [line.strip() for line in comment]
+        comment = "\n".join(comment)
 
-		callbacks = {}
+        return comment
 
-		for (declaration, symbol, short_name, _) in regex.findall(contents):
-			self.declarations.append("extern %s;" % declaration)
+    def _process_test_file(self, file_name, contents):
+        file_name = os.path.basename(file_name)
+        file_name, _ = os.path.splitext(file_name)
 
-			callbacks[short_name] = '{"%s", &%s}' % (
-				short_name, symbol
-			)
+        regex_string = TEST_FUNC_REGEX % file_name
+        regex = re.compile(regex_string, re.MULTILINE)
 
-		initialize = callbacks.pop("initialize", "NULL")
-		cleanup = callbacks.pop("cleanup", "NULL")
+        callbacks = []
+        initialize = cleanup = "{NULL, NULL, 0}"
 
-		if not callbacks:
-			return False
+        for (declaration, symbol, short_name, _) in regex.findall(contents):
+            self.declarations.append("extern %s;" % declaration)
+            func_ptr = '{"%s", &%s, %d}' % (
+                short_name, symbol, len(self.suites)
+            )
 
-		self.callbacks.append(TEMPLATE_CALLBACKS.substitute(
-			suite_name = file_name,
-			callbacks = ",\n\t".join(callbacks.values())
-		).strip())
+            if short_name == 'initialize':
+                initialize = func_ptr
+            elif short_name == 'cleanup':
+                cleanup = func_ptr
+            else:
+                callbacks.append(func_ptr)
 
-		self.suites[file_name] = TEMPLATE_SUITE.substitute(
-			clean_name = self._cleanup_name(file_name),
-			suite_name = file_name,
-			initialize = initialize,
-			cleanup = cleanup,
-			test_count = len(callbacks)
-		).strip()
+        if not callbacks:
+            return 0
 
-		return True
+        suite = TEMPLATE_SUITE.substitute(
+            clean_name = file_name,
+            initialize = initialize,
+            cleanup = cleanup,
+            cb_ptr = "&_all_callbacks[%d]" % len(self.callbacks),
+            cb_count = len(callbacks)
+        ).strip()
+
+        self.callbacks += callbacks
+        self.suites.append(suite)
+        self.suite_list.append(file_name)
+
+        return len(callbacks)
 
 CLAY_FILES = {
-"clay.c" : r"""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""",
+"clay.c" : r"""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""",
 "clay_sandbox.c" : r"""eJx1VG1P2zAQ/uz8iiPVSrKGETa0acr6YRJlqii0akFMopUVEgesJU6J3Wps8N93jkNeCquiJvE9d/c895IeT2KWAL0eX3z6aPUIvnDBYDb5fnk6nZ/TxWgG+8vlvtVjqWT/Axxqu4h5YllShYpHEN2HBdAoDR/pOlT3N8f+18+roDZzoSwu6TZMeUxVti5BTpQLqYzre33gWn8tIlWxiRRoR/wLLFIwtSkEOKk+cjTOg75ULgyH4EO/bxHiLOh4cTKeO1J9kIpmecxceHpCizZMLs7aBtf4hFHEpKziXdPpmQnoBtZzhzbKb1Muyd5ukoQVHkj+h1EFKRN3NXtTjlJZZd6GBY3yjVAwhONgB2MCMrHF4hTyZoUYDEPsy/MZCrI90E/lbWTuV4vRfDafno4nI9sC8oxFBlJl4vjS63SY8AScH0xdsmw90wKck+vp/MQ1lD0wSlwXU1Z1Pgrq3pIkL8DhSMkPgMO3RkkAgwF3S6Y7MhB8xxQ+OLUmvsKikpLJHh7qXNpLcbFhSNhYXk+HhpoUeiZEtH50XuqOJu+l6jp0izshzxZe9dj4O/2EKGWhoEmexqx4ewJbh7mkURbrruzWldhFDIcSDh9gab+TS9sOqp3RpgwOiqRtqApaBo3yLAtF/LIjRIp1gcwSpzKYucrrd9ereHhQcmx2Qj5KxbIa15a6zXkM5T5uhETjbf7b0WdGYbsGzdbuzr7xf+3d1Ed7URXytBxcu8TrBv4sf7YWV6+IbnU5A92NatLXuluM2pPp6wgYCDPhQOBDl7qJ3voGaegBHK1gb9j5fpmh6gIHAy2gjQrMGGEmPXkNGgZajNdIr1Nnv7AZ6zYp/UW5uJpMdkUYdMyLjnr/i++7mqz/Fj667+LfRjaLgOT/ATlX1I8=""",
-"clay.h" : r"""eJyFkUFrAyEQhc/xV0yyl91lKT23SaCUDQ0svTSXnsTqSARRo25J/311N4VsQprb88043zwtlDQCJVD62r180l37saNvlJIimcrglU8KZbjuBcIyRKHV18N+Tci3VQK4Zj+UshDQx5LMlInArREqKmsaMks6JGfPPNRSaWzGFp0oF1X03voLT2DgXrk8q3o+BwaMlGtkpnfl4Jb16ViN57pqYBTWsUOP+fpfumGCSyuXeHS+gUyppkGGSgXrFTw26TU2266lNKtu+z6oxaY3PO8FnGkNkqVs4gkWUJzNnBJzz13i8iawPTrkEQXICTnaAf4/+sS4B5/fjpvoHkPIWBXA2AjR93hFJQWmv5fkF3Vhx6U="""
+"clay.h" : r"""eJy9lF9PwjAUxZ/Zp7huLxtZCL4ikhgDkYT4IonxqSntnTTWdvaP4re33TA6HCG+8LTb2/b+zjnZlolKcayAkNvVzRNZzx/W5I6QJAtNofBPP8mEYtJzhKl1XIrNaDtLknctODBJPwmh1qJxeTIQygHTigsntCqTQaht6GypgWElJJbtERkoB7tojDYHPY6WGVHvZ8WLdqu95IRutHHF1W8NFh1hEqnydd508+F+WbTrYVFCW+iavnmM178NNxNevXWkDlZy3NWmhEgvugabnQJm1zAuQ0qL5WpOSKxWy/umShdesagXGJUSKho88wmkkP3MLOGy6CHHsyfJ06Pg+a5G5pBD1VHgdCPipIQ95hT/4rjzIMCgtZEsLCjtwBmPfeAumW2RvZwn93HRhz5v8L0azpD7+DD3xnYP8RhnjeG7bIMdpcdeow9qlFDP/5n72F4B7k18uIjBHTIfs5ykHf0Y/ixV8gUUh4yr"""
 }
 
 if __name__ == '__main__':
-	main()
-
-
+    main()
 
