@@ -1,40 +1,47 @@
 Come out and Clay
 =================
 
+Did you know that the word "test" has its roots in the latin word *"testum"*, meaning
+"earthen pot", and *"testa"*,  meaning "piece of burned clay"?
+
+This is because historically, testing implied melting metal in a pot to check its quality.
 Clay is what tests are made of.
 
-
 ## Usage Overview
+
+Clay is a minimal C unit testing framework. It's been written to replace the old
+framework in [libgit2](https://github.com/libgit2/libgit2), but it's both very versatile
+and straightforward to use.
 
 Can you count to funk?
 
 - **One: Write some tests**
 
-~~~~ c
-/* adding.c for the "Adding" suite */
-#include "clay.h"
+    ~~~~ c
+    /* adding.c for the "Adding" suite */
+    #include "clay.h"
 
-static int *answer;
+    static int *answer;
 
-void test_adding__initialize()
-{
-    answer = malloc(sizeof(int));
-    clay_assert(answer != NULL, "No memory left?");
-    *answer = 42;
-}
+    void test_adding__initialize()
+    {
+        answer = malloc(sizeof(int));
+        clay_assert(answer != NULL, "No memory left?");
+        *answer = 42;
+    }
 
-void test_adding__cleanup()
-{
-    free(answer);
-}
+    void test_adding__cleanup()
+    {
+        free(answer);
+    }
 
-void test_adding__make_sure_math_still_works()
-{
-    clay_assert(5 > 3, "Five should probably be greater than three");
-    clay_assert(-5 < 2, "Negative numbers are small, I think");
-    clay_assert(*answer == 42, "The universe is doing OK. And the initializer too.");
-}
-~~~~~
+    void test_adding__make_sure_math_still_works()
+    {
+        clay_assert(5 > 3, "Five should probably be greater than three");
+        clay_assert(-5 < 2, "Negative numbers are small, I think");
+        clay_assert(*answer == 42, "The universe is doing OK. And the initializer too.");
+    }
+    ~~~~~
 
 - **Two: Mix them with Clay**
 
@@ -68,12 +75,12 @@ The `initialize` and `cleanup` methods have the following syntax, with `suitenam
 being the current suite name, e.g. `adding` for the `adding.c` suite.
 
 ~~~~ c
-void test_modname__initialize(void)
+void test_suitename__initialize(void)
 {
     /* init */
 }
 
-void test_modname__cleanup(void)
+void test_suitename__cleanup(void)
 {
     /* cleanup */
 }
@@ -136,9 +143,9 @@ this file with the rest of the suites will generate a fully functional test exec
 
     $ gcc -I. clay_main.c suite1.c test2.c -o run_tests
 
-**Do note that the Clay mixer only needs to be called when adding new tests to a suite,
-in order to generate the boilerplate**. Consequently, the `clay_main.c` boilerplate can
-be checked in Version Control to allow building the test suite without any prior processing.
+**Do note that the Clay mixer only needs to be ran when adding new tests to a suite,
+in order to regenerate the boilerplate**. Consequently, the `clay_main.c` boilerplate can
+be checked in version control to allow building the test suite without any prior processing.
 
 This is handy when e.g. generating tests in a local computer, and then building and testing
 them on an embedded device or a platform where Python is not available.
@@ -193,6 +200,10 @@ Example:
 static int check_string(const char *str)
 {
     const char *aux = process_string(str);
+
+    if (aux == NULL)
+        return -1;
+
     return strcmp(my_function(aux), str) == 0 ? 0 : -1;
 }
 
@@ -215,6 +226,11 @@ void test_example__a_test_with_auxiliary_methods()
 static void check_string(const char *str)
 {
     const char *aux = process_string(str);
+
+    clay_assert(
+        aux != NULL,
+        "String processing failed"
+    );
 
     clay_assert(
         strcmp(my_function(aux), str) == 0,
