@@ -10,7 +10,7 @@ Clay is what tests are made of.
 ## Usage Overview
 
 Clay is a minimal C unit testing framework. It's been written to replace the old
-framework in [libgit2](https://github.com/libgit2/libgit2), but it's both very versatile
+framework in [libgit2][libgit2], but it's both very versatile
 and straightforward to use.
 
 Can you count to funk?
@@ -244,3 +244,16 @@ void test_example__a_test_with_auxiliary_methods()
     check_string("bar");
 }
 ~~~~
+
+About
+=====
+
+Clay has been written from scratch by Vicent Martí, to replace the old testing
+framework in [libgit2][libgit2]. 
+
+Do you know what languages are *in* on the SF startup scene? Node.js *and* Latin.
+Follow [@tanoku](https://www.twitter.com/tanoku) on Twitter to receive more lessons
+on word etymology. You can be hip too.
+
+
+[libgit2]: https://github.com/libgit2/libgit2
