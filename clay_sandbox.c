@@ -20,6 +20,8 @@ static int
 find_tmp_path(char *buffer, size_t length)
 {
 	static const size_t var_count = 4;
+	static const char *slashtmp = "/tmp";
+	static const char *curdir = ".";
 	static const char *env_vars[] = {
 		"TMPDIR", "TMP", "TEMP", "USERPROFILE"
  	};
@@ -41,6 +43,19 @@ find_tmp_path(char *buffer, size_t length)
 			return 1;
 		}
 	}
+
+	/* If the environment doesn't say anything, try to use /tmp */
+	if (is_valid_tmp_path(slashtmp)) {
+		strncpy(buffer, slashtmp, length);
+		return 1;
+	}
+
+	/* This system doesn't like us, try to use the current directory */
+	if (is_valid_tmp_path(curdir)) {
+		strncpy(buffer, curdir, length);
+		return 1;
+	}
+
 
 	return 0;
 }
