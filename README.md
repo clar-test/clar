@@ -23,19 +23,19 @@ Can you count to funk?
 
     static int *answer;
 
-    void test_adding__initialize()
+    void test_adding__initialize(void)
     {
         answer = malloc(sizeof(int));
         clay_assert(answer != NULL, "No memory left?");
         *answer = 42;
     }
 
-    void test_adding__cleanup()
+    void test_adding__cleanup(void)
     {
         free(answer);
     }
 
-    void test_adding__make_sure_math_still_works()
+    void test_adding__make_sure_math_still_works(void)
     {
         clay_assert(5 > 3, "Five should probably be greater than three");
         clay_assert(-5 < 2, "Negative numbers are small, I think");
@@ -207,7 +207,7 @@ static int check_string(const char *str)
     return strcmp(my_function(aux), str) == 0 ? 0 : -1;
 }
 
-void test_example__a_test_with_auxiliary_methods()
+void test_example__a_test_with_auxiliary_methods(void)
 {
     clay_must_pass(
         check_string("foo"),
@@ -238,7 +238,7 @@ static void check_string(const char *str)
     );
 }
 
-void test_example__a_test_with_auxiliary_methods()
+void test_example__a_test_with_auxiliary_methods(void)
 {
     check_string("foo");
     check_string("bar");
