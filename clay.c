@@ -157,9 +157,13 @@ clay_run_single(const struct clay_func *test,
 	clay_run_test(test, &suite->initialize, &suite->cleanup);
 }
 
-static int
-clay_usage(void)
+static void
+clay_usage(const char *arg)
 {
+	printf("Usage: %s [options]\n\n", arg);
+	printf("Options:\n");
+	printf("  -tXX\t\tRun only the test number XX\n");
+	printf("  -sXX\t\tRun only the suite number XX\n");
 	exit(-1);
 }
 
@@ -173,19 +177,19 @@ clay_parse_args(
 {
 	int i;
 
-	for (i = 0; i < argc; ++i) {
+	for (i = 1; i < argc; ++i) {
 		char *argument = argv[i];
 		char action;
 		int num;
 
 		if (argument[0] != '-')
-			clay_usage();
+			clay_usage(argv[0]);
 
 		action = argument[1];
 		num = strtol(argument + 2, &argument, 10);
 
 		if (*argument != '\0' || num < 0)
-			clay_usage();
+			clay_usage(argv[0]);
 
 		switch (action) {
 		case 't':
@@ -212,7 +216,7 @@ clay_parse_args(
 			break;
 
 		default:
-			clay_usage();
+			clay_usage(argv[0]);
 		}
 	}
 }
@@ -228,11 +232,14 @@ clay_test(
 {
 	clay_print("Loaded %d suites: %s\n", (int)suite_count, suites_str);
 
-	if (!clay_sandbox())
-		return -1;
+	if (!clay_sandbox()) {
+		fprintf(stderr,
+			"Failed to sandbox the test runner.\n"
+			"Testing will proceed without sandboxing.\n");
+	}
 
 	if (argc > 1) {
-		clay_parse_args(argc - 1, argv + 1,
+		clay_parse_args(argc, argv,
 			callbacks, cb_count, suites, suite_count);
 
 	} else {
