@@ -68,14 +68,14 @@ def main():
     for folder in args:
         builder = ClayTestBuilder(folder,
             clay_path = options.clay_path,
-            output = options.output,
+            output_folder = options.output,
             print_mode = options.print_mode)
 
         builder.render()
 
 
 class ClayTestBuilder:
-    def __init__(self, folder_name, output = None, clay_path = None, print_mode = 'stdout'):
+    def __init__(self, folder_name, output_folder = None, clay_path = None, print_mode = 'stdout'):
         self.declarations = []
         self.callbacks = []
         self.suites = []
@@ -83,19 +83,34 @@ class ClayTestBuilder:
 
         self.clay_path = clay_path
         self.print_mode = print_mode
-        self.output = output or os.path.join(folder_name, "clay_main.c")
-        self.output_header = os.path.join(folder_name, "clay.h")
+
+        folder_name = os.path.abspath(folder_name)
+        if not output_folder:
+            output_folder = folder_name
+
+        self.output = os.path.join(output_folder, "clay_main.c")
+        self.output_header = os.path.join(output_folder, "clay.h")
 
         self.modules = ["clay.c", "clay_sandbox.c"]
 
         print("Loading test suites...")
 
-        file_list = os.listdir(folder_name)
-        for fname in fnmatch.filter(file_list, "*.c"):
-            with open(fname) as f:
-                tcount = self._process_test_file(fname, f.read())
-                if tcount:
-                    print ("  %s: %d tests" % (fname, tcount))
+        for root, dirs, files in os.walk(folder_name):
+            module_root = root[len(folder_name):]
+            module_root = [c for c in module_root.split(os.sep) if c]
+
+            tests_in_module = fnmatch.filter(files, "*.c")
+
+            for test_file in tests_in_module:
+                full_path = os.path.join(root, test_file)
+                test_name = "_".join(module_root + [test_file[:-2]])
+
+                with open(full_path) as f:
+                    self._process_test_file(test_name, f.read())
+
+        if not self.suites:
+            raise RuntimeError(
+                'No tests found under "%s"' % folder_name)
 
     def render(self):
         template = TEMPLATE_MAIN.substitute(
@@ -162,11 +177,8 @@ class ClayTestBuilder:
 
         return comment
 
-    def _process_test_file(self, file_name, contents):
-        file_name = os.path.basename(file_name)
-        file_name, _ = os.path.splitext(file_name)
-
-        regex_string = TEST_FUNC_REGEX % file_name
+    def _process_test_file(self, test_name, contents):
+        regex_string = TEST_FUNC_REGEX % test_name
         regex = re.compile(regex_string, re.MULTILINE)
 
         callbacks = []
@@ -186,10 +198,12 @@ class ClayTestBuilder:
                 callbacks.append(func_ptr)
 
         if not callbacks:
-            return 0
+            return
+
+        clean_name = test_name.replace("_", "::")
 
         suite = TEMPLATE_SUITE.substitute(
-            clean_name = file_name,
+            clean_name = clean_name,
             initialize = initialize,
             cleanup = cleanup,
             cb_ptr = "&_all_callbacks[%d]" % len(self.callbacks),
@@ -198,9 +212,9 @@ class ClayTestBuilder:
 
         self.callbacks += callbacks
         self.suites.append(suite)
-        self.suite_list.append(file_name)
+        self.suite_list.append(clean_name)
 
-        return len(callbacks)
+        print("  %s (%d tests)" % (clean_name, len(callbacks)))
 
 CLAY_FILES = {
 "clay.c" : r"""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""",
