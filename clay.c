@@ -211,7 +211,7 @@ clay_parse_args(
 				exit(-1);
 			}
 
-			clay_print("Started (%s::)\n", suites[num].name);
+			clay_print("Started (%s::*)\n", suites[num].name);
 			clay_run_suite(&suites[num]);
 			break;
 
@@ -307,7 +307,7 @@ clay__assert(
 	}
 }
 
-void clay_set_cleanup(void (*cleanup)(void *), void *opaque)
+void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 {
 	_clay.local_cleanup = cleanup;
 	_clay.local_cleanup_payload = opaque;
