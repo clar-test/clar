@@ -6,8 +6,29 @@
 #include <math.h>
 
 /* required for sandboxing */
+#include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+#	include <windows.h>
+#	include <io.h>
+#	include <Shellapi.h>
+#	pragma comment(lib, "shell32")
+
+#	define PLATFORM_SEP '\\'
+#	define stat(path, st) _stat(path, st)
+#	define mkdir(path, mode) _mkdir(path)
+#	define access(path, mode) _access(path, mode)
+#	define mktemp(path) _mktemp(path)
+
+#	define W_OK 02
+#	define S_ISDIR(x) (x & _S_IFDIR) != 0
+	typedef struct _stat STAT_T;
+#else
+#	define PLATFORM_SEP '/'
+#	include <unistd.h>
+	typedef struct stat STAT_T;
+#endif
 
 #include "clay.h"
 
@@ -308,7 +329,7 @@ clay__assert(
 	if (should_abort) {
 		if (!_clay.trampoline_enabled) {
 			fprintf(stderr,
-				"Unhandled exception: a cleanup method raised an exception.");
+				"Fatal error: a cleanup method raised an exception.");
 			exit(-1);
 		}
 

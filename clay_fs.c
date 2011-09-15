@@ -1,3 +1,70 @@
+#ifdef _WIN32
+
+#define FOF_FLAGS (FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR)
+
+static char *
+fileops_path(const char *_path)
+{
+	char *path = NULL;
+	size_t length, i;
+
+	if (_path == NULL)
+		return NULL;
+
+	length = strlen(_path);
+	path = malloc(length + 2);
+
+	if (path == NULL)
+		return NULL;
+
+	memcpy(path, _path, length);
+	path[length] = 0;
+	path[length + 1] = 0;
+
+	for (i = 0; i < length; ++i) {
+		if (path[i] == '/')
+			path[i] = '\\';
+	}
+
+	return path;
+}
+
+static void
+fileops(int mode, const char *_source, const char *_dest)
+{
+	SHFILEOPSTRUCT fops;
+
+	char *source = fileops_path(_source);
+	char *dest = fileops_path(_dest);
+
+	ZeroMemory(&fops, sizeof(SHFILEOPSTRUCT));
+
+	fops.wFunc = mode;
+	fops.pFrom = source;
+	fops.pTo = dest;
+	fops.fFlags = FOF_FLAGS;
+
+	cl_assert_(
+		SHFileOperation(&fops) == 0,
+		"Windows SHFileOperation failed"
+	);
+
+	free(source);
+}
+
+static void
+fs_rm(const char *_source)
+{
+	fileops(FO_DELETE, _source, NULL);
+}
+
+static void
+fs_copy(const char *_source, const char *_dest)
+{
+	fileops(FO_COPY, _source, _dest);
+}
+
+#else
 static int
 shell_out(char * const argv[])
 {
@@ -62,3 +129,4 @@ fs_rm(const char *source)
 		"Failed to cleanup the sandbox"
 	);
 }
+#endif

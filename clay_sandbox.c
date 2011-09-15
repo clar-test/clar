@@ -1,19 +1,17 @@
-#ifdef _WIN32
-#	define PLATFORM_SEP '\\'
-#else
-#	define PLATFORM_SEP '/'
-#endif
-
 static char _clay_path[4096];
 
 static int
 is_valid_tmp_path(const char *path)
 {
-	struct stat st;
-	return (lstat(path, &st) == 0 &&
-		(S_ISDIR(st.st_mode) ||
-		S_ISLNK(st.st_mode)) &&
-		access(path, W_OK) == 0);
+	STAT_T st;
+
+	if (stat(path, &st) != 0)
+		return 0;
+
+	if (!S_ISDIR(st.st_mode))
+		return 0;
+
+	return (access(path, W_OK) == 0);
 }
 
 static int
@@ -62,21 +60,32 @@ static void clay_unsandbox(void)
 	if (_clay_path[0] == '\0')
 		return;
 
+#ifdef _WIN32
+	chdir("..");
+#endif
+
 	fs_rm(_clay_path);
 }
 
 static int clay_sandbox(void)
 {
 	const char path_tail[] = "clay_tmp_XXXXXX";
-	size_t len;
+	size_t len, i;
 
 	if (!find_tmp_path(_clay_path, sizeof(_clay_path)))
 		return 0;
 
 	len = strlen(_clay_path);
 
-	if (_clay_path[len - 1] != PLATFORM_SEP) {
-		_clay_path[len++] = PLATFORM_SEP;
+#ifdef _WIN32
+	for (i = 0; i < len; ++i) {
+		if (_clay_path[i] == '\\')
+			_clay_path[i] = '/';
+	}
+#endif
+
+	if (_clay_path[len - 1] != '/') {
+		_clay_path[len++] = '/';
 	}
 
 	strcpy(_clay_path + len, path_tail);
