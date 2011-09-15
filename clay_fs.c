@@ -50,6 +50,7 @@ fileops(int mode, const char *_source, const char *_dest)
 	);
 
 	free(source);
+	free(dest);
 }
 
 static void
