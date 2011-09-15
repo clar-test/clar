@@ -15,7 +15,6 @@
 #	include <Shellapi.h>
 #	pragma comment(lib, "shell32")
 
-#	define PLATFORM_SEP '\\'
 #	define stat(path, st) _stat(path, st)
 #	define mkdir(path, mode) _mkdir(path)
 #	define access(path, mode) _access(path, mode)
@@ -25,7 +24,6 @@
 #	define S_ISDIR(x) (x & _S_IFDIR) != 0
 	typedef struct _stat STAT_T;
 #else
-#	define PLATFORM_SEP '/'
 #	include <unistd.h>
 	typedef struct stat STAT_T;
 #endif

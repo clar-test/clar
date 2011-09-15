@@ -70,7 +70,7 @@ static void clay_unsandbox(void)
 static int clay_sandbox(void)
 {
 	const char path_tail[] = "clay_tmp_XXXXXX";
-	size_t len, i;
+	size_t len;
 
 	if (!find_tmp_path(_clay_path, sizeof(_clay_path)))
 		return 0;
@@ -78,9 +78,12 @@ static int clay_sandbox(void)
 	len = strlen(_clay_path);
 
 #ifdef _WIN32
-	for (i = 0; i < len; ++i) {
-		if (_clay_path[i] == '\\')
-			_clay_path[i] = '/';
+	{ /* normalize path to POSIX forward slashes */
+		size_t i;
+		for (i = 0; i < len; ++i) {
+			if (_clay_path[i] == '\\')
+				_clay_path[i] = '/';
+		}
 	}
 #endif
 
