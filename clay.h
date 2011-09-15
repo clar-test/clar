@@ -13,6 +13,12 @@ void clay__assert(
 
 void cl_set_cleanup(void (*cleanup)(void *), void *opaque);
 
+#ifdef CLAY_FIXTURE_PATH
+const char *cl_fixture(const char *fixture_name);
+const char *cl_fixture_s(const char *fixture_name);
+void cl_fixture_cleanup(void);
+#endif
+
 /**
  * Assertion macros with explicit error message
  */

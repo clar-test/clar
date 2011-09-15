@@ -11,6 +11,9 @@
 
 #include "clay.h"
 
+static void fs_rm(const char *_source);
+static void fs_copy(const char *_source, const char *dest);
+
 struct clay_error {
 	const char *test;
 	int test_number;
@@ -37,6 +40,7 @@ static struct {
 
 	void (*local_cleanup)(void *);
 	void *local_cleanup_payload;
+	int fixtures_sandboxed;
 
 	jmp_buf trampoline;
 	int trampoline_enabled;
@@ -84,6 +88,11 @@ clay_run_test(
 
 	if (cleanup->ptr != NULL)
 		cleanup->ptr();
+
+#ifdef CLAY_FIXTURE_PATH
+	if (_clay.fixtures_sandboxed)
+		cl_fixture_cleanup();
+#endif
 
 	_clay.test_count++;
 

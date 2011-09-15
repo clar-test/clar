@@ -57,26 +57,12 @@ find_tmp_path(char *buffer, size_t length)
 	return 0;
 }
 
-static int clean_folder(const char *path)
-{
-	const char os_cmd[] =
-#ifdef _WIN32
-		"rd /s /q \"%s\"";
-#else
-		"rm -rf \"%s\"";
-#endif
-
-	char command[4096];
-	snprintf(command, sizeof(command), os_cmd, path);
-	return system(command);
-}
-
 static void clay_unsandbox(void)
 {
 	if (_clay_path[0] == '\0')
 		return;
 
-	clean_folder(_clay_path);
+	fs_rm(_clay_path);
 }
 
 static int clay_sandbox(void)
