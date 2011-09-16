@@ -29,6 +29,7 @@
 #	define S_ISDIR(x) ((x & _S_IFDIR) != 0)
 	typedef struct _stat STAT_T;
 #else
+#	include <sys/wait.h> /* waitpid(2) */
 #	include <unistd.h>
 #	define _CC
 	typedef struct stat STAT_T;
