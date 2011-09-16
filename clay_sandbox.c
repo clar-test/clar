@@ -22,12 +22,11 @@ find_tmp_path(char *buffer, size_t length)
 		"TMPDIR", "TMP", "TEMP", "USERPROFILE"
  	};
 
- 	size_t i;
-
 #ifdef _WIN32
 	if (GetTempPath((DWORD)length, buffer))
 		return 0;
-#endif
+#else
+ 	size_t i;
 
 	for (i = 0; i < var_count; ++i) {
 		const char *env = getenv(env_vars[i]);
@@ -45,6 +44,7 @@ find_tmp_path(char *buffer, size_t length)
 		strncpy(buffer, "/tmp", length);
 		return 0;
 	}
+#endif
 
 	/* This system doesn't like us, try to use the current directory */
 	if (is_valid_tmp_path(".")) {
@@ -91,10 +91,15 @@ static int build_sandbox_path(void)
 		_clay_path[len++] = '/';
 	}
 
-	strcpy(_clay_path + len, path_tail);
+	strncpy(_clay_path + len, path_tail, sizeof(_clay_path) - len);
 
+#ifdef _WIN32
+	if (_mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
+		return -1;
+#else
 	if (mktemp(_clay_path) == NULL)
 		return -1;
+#endif
 
 	return 0;
 }

@@ -34,7 +34,7 @@ static const struct clay_suite _all_suites[] = {
 
 static const char _suites_str[] = "${suites_str}";
 
-int main(int argc, char *argv[])
+int _CC main(int argc, char *argv[])
 {
     return clay_test(
         argc, argv, _suites_str,

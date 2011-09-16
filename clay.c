@@ -12,19 +12,25 @@
 #ifdef _WIN32
 #	include <windows.h>
 #	include <io.h>
-#	include <Shellapi.h>
+#	include <shellapi.h>
+#	include <direct.h>
 #	pragma comment(lib, "shell32")
+
+#	define _CC __cdecl
 
 #	define stat(path, st) _stat(path, st)
 #	define mkdir(path, mode) _mkdir(path)
+#	define chdir(path) _chdir(path)
 #	define access(path, mode) _access(path, mode)
-#	define mktemp(path) _mktemp(path)
+#	define strdup(str) _strdup(str)
+#	define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
 
 #	define W_OK 02
-#	define S_ISDIR(x) (x & _S_IFDIR) != 0
+#	define S_ISDIR(x) ((x & _S_IFDIR) != 0)
 	typedef struct _stat STAT_T;
 #else
 #	include <unistd.h>
+#	define _CC
 	typedef struct stat STAT_T;
 #endif
 
