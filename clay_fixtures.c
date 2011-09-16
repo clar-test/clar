@@ -26,17 +26,13 @@ const char *cl_fixture(const char *fixture_name)
 	return fixture_path(CLAY_FIXTURE_PATH, fixture_name);
 }
 
-const char *cl_fixture_s(const char *fixture_name)
+void cl_fixture_sandbox(const char *fixture_name)
 {
 	fs_copy(cl_fixture(fixture_name), _clay_path);
-	_clay.fixtures_sandboxed = 1;
-
-	return fixture_path(_clay_path, fixture_name);
 }
 
-void cl_fixture_cleanup(void)
+void cl_fixture_cleanup(const char *fixture_name)
 {
-	fs_rm(fixture_path(_clay_path, "*"));
-	_clay.fixtures_sandboxed = 0;
+	fs_rm(fixture_path(_clay_path, fixture_name));
 }
 #endif

@@ -65,6 +65,12 @@ fs_copy(const char *_source, const char *_dest)
 	fileops(FO_COPY, _source, _dest);
 }
 
+void
+cl_fs_cleanup(void)
+{
+	fs_rm(fixture_path(_clay_path, "*"));
+}
+
 #else
 static int
 shell_out(char * const argv[])
@@ -118,10 +124,10 @@ fs_copy(const char *_source, const char *dest)
 static void
 fs_rm(const char *source)
 {
-	char *argv[3];
+	char *argv[4];
 
 	argv[0] = "/bin/rm";
-	argv[1] = "-rf";
+	argv[1] = "-Rf";
 	argv[2] = (char *)source;
 	argv[3] = NULL;
 
@@ -129,5 +135,12 @@ fs_rm(const char *source)
 		shell_out(argv),
 		"Failed to cleanup the sandbox"
 	);
+}
+
+void
+cl_fs_cleanup(void)
+{
+	clay_unsandbox();
+	clay_sandbox();
 }
 #endif

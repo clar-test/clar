@@ -12,11 +12,12 @@ void clay__assert(
 	int should_abort);
 
 void cl_set_cleanup(void (*cleanup)(void *), void *opaque);
+void cl_fs_cleanup(void);
 
 #ifdef CLAY_FIXTURE_PATH
 const char *cl_fixture(const char *fixture_name);
-const char *cl_fixture_s(const char *fixture_name);
-void cl_fixture_cleanup(void);
+void cl_fixture_sandbox(const char *fixture_name);
+void cl_fixture_cleanup(const char *fixture_name);
 #endif
 
 /**

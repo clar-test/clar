@@ -26,7 +26,7 @@ find_tmp_path(char *buffer, size_t length)
 
 #ifdef _WIN32
 	if (GetTempPath((DWORD)length, buffer))
-		return 1;
+		return 0;
 #endif
 
 	for (i = 0; i < var_count; ++i) {
@@ -36,23 +36,23 @@ find_tmp_path(char *buffer, size_t length)
 
 		if (is_valid_tmp_path(env)) {
 			strncpy(buffer, env, length);
-			return 1;
+			return 0;
 		}
 	}
 
 	/* If the environment doesn't say anything, try to use /tmp */
 	if (is_valid_tmp_path("/tmp")) {
 		strncpy(buffer, "/tmp", length);
-		return 1;
+		return 0;
 	}
 
 	/* This system doesn't like us, try to use the current directory */
 	if (is_valid_tmp_path(".")) {
 		strncpy(buffer, ".", length);
-		return 1;
+		return 0;
 	}
 
-	return 0;
+	return -1;
 }
 
 static void clay_unsandbox(void)
@@ -67,13 +67,13 @@ static void clay_unsandbox(void)
 	fs_rm(_clay_path);
 }
 
-static int clay_sandbox(void)
+static int build_sandbox_path(void)
 {
 	const char path_tail[] = "clay_tmp_XXXXXX";
 	size_t len;
 
-	if (!find_tmp_path(_clay_path, sizeof(_clay_path)))
-		return 0;
+	if (find_tmp_path(_clay_path, sizeof(_clay_path)) < 0)
+		return -1;
 
 	len = strlen(_clay_path);
 
@@ -94,14 +94,22 @@ static int clay_sandbox(void)
 	strcpy(_clay_path + len, path_tail);
 
 	if (mktemp(_clay_path) == NULL)
-		return 0;
+		return -1;
+
+	return 0;
+}
+
+static int clay_sandbox(void)
+{
+	if (_clay_path[0] == '\0' && build_sandbox_path() < 0)
+		return -1;
 
 	if (mkdir(_clay_path, 0700) != 0)
-		return 0;
+		return -1;
 
 	if (chdir(_clay_path) != 0)
-		return 0;
+		return -1;
 
-	return 1;
+	return 0;
 }
 

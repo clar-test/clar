@@ -33,6 +33,9 @@
 static void fs_rm(const char *_source);
 static void fs_copy(const char *_source, const char *dest);
 
+static const char *
+fixture_path(const char *base, const char *fixture_name);
+
 struct clay_error {
 	const char *test;
 	int test_number;
@@ -59,7 +62,6 @@ static struct {
 
 	void (*local_cleanup)(void *);
 	void *local_cleanup_payload;
-	int fixtures_sandboxed;
 
 	jmp_buf trampoline;
 	int trampoline_enabled;
@@ -107,11 +109,6 @@ clay_run_test(
 
 	if (cleanup->ptr != NULL)
 		cleanup->ptr();
-
-#ifdef CLAY_FIXTURE_PATH
-	if (_clay.fixtures_sandboxed)
-		cl_fixture_cleanup();
-#endif
 
 	_clay.test_count++;
 
@@ -260,7 +257,7 @@ clay_test(
 {
 	clay_print("Loaded %d suites: %s\n", (int)suite_count, suites_str);
 
-	if (!clay_sandbox()) {
+	if (clay_sandbox() < 0) {
 		fprintf(stderr,
 			"Failed to sandbox the test runner.\n"
 			"Testing will proceed without sandboxing.\n");
