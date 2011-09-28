@@ -96,8 +96,11 @@ static int build_sandbox_path(void)
 #ifdef _WIN32
 	if (_mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
 		return -1;
+
+	if (mkdir(_clay_path, 0700) != 0)
+		return -1;
 #else
-	if (mktemp(_clay_path) == NULL)
+	if (mkdtemp(_clay_path) == NULL)
 		return -1;
 #endif
 
@@ -107,9 +110,6 @@ static int build_sandbox_path(void)
 static int clay_sandbox(void)
 {
 	if (_clay_path[0] == '\0' && build_sandbox_path() < 0)
-		return -1;
-
-	if (mkdir(_clay_path, 0700) != 0)
 		return -1;
 
 	if (chdir(_clay_path) != 0)
