@@ -48,11 +48,15 @@ void cl_fixture_cleanup(const char *fixture_name);
 #define cl_check_fail(expr) cl_check_fail_((expr), NULL)
 #define cl_check(expr) cl_check_((expr), NULL)
 
-
 /**
  * Forced failure/warning
  */
 #define cl_fail(desc) clay__assert(0, __FILE__, __LINE__, "Test failed.", desc, 1)
 #define cl_warning(desc) clay__assert(0, __FILE__, __LINE__, "Warning during test execution:", desc, 0)
+
+/**
+ * Test method declarations
+ */
+${extern_declarations}
 
 #endif

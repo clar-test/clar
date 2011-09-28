@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define clay_print(...) ${clay_print}
+
 #ifdef _WIN32
 #	include <windows.h>
 #	include <io.h>
@@ -16,22 +18,24 @@
 #	include <direct.h>
 #	pragma comment(lib, "shell32")
 
-#	define _CC __cdecl
+#	define _MAIN_CC __cdecl
 
 #	define stat(path, st) _stat(path, st)
 #	define mkdir(path, mode) _mkdir(path)
 #	define chdir(path) _chdir(path)
 #	define access(path, mode) _access(path, mode)
 #	define strdup(str) _strdup(str)
-#	define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
 
-#	define W_OK 02
-#	define S_ISDIR(x) ((x & _S_IFDIR) != 0)
+#	ifndef __MINGW32__
+#		define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
+#		define W_OK 02
+#		define S_ISDIR(x) ((x & _S_IFDIR) != 0)
+#	endif
 	typedef struct _stat STAT_T;
 #else
 #	include <sys/wait.h> /* waitpid(2) */
 #	include <unistd.h>
-#	define _CC
+#	define _MAIN_CC
 	typedef struct stat STAT_T;
 #endif
 
@@ -343,4 +347,25 @@ void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 {
 	_clay.local_cleanup = cleanup;
 	_clay.local_cleanup_payload = opaque;
+}
+
+${clay_modules}
+
+static const struct clay_func _all_callbacks[] = {
+    ${test_callbacks}
+};
+
+static const struct clay_suite _all_suites[] = {
+    ${test_suites}
+};
+
+static const char _suites_str[] = "${suites_str}";
+
+int _MAIN_CC main(int argc, char *argv[])
+{
+    return clay_test(
+        argc, argv, _suites_str,
+        _all_callbacks, ${cb_count},
+        _all_suites, ${suite_count}
+    );
 }

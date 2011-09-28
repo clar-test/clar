@@ -93,7 +93,7 @@ static int build_sandbox_path(void)
 
 	strncpy(_clay_path + len, path_tail, sizeof(_clay_path) - len);
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 	if (_mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
 		return -1;
 
