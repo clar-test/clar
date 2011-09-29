@@ -16,7 +16,6 @@
 #	include <io.h>
 #	include <shellapi.h>
 #	include <direct.h>
-#	pragma comment(lib, "shell32")
 
 #	define _MAIN_CC __cdecl
 
@@ -27,6 +26,7 @@
 #	define strdup(str) _strdup(str)
 
 #	ifndef __MINGW32__
+#		pragma comment(lib, "shell32")
 #		define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
 #		define W_OK 02
 #		define S_ISDIR(x) ((x & _S_IFDIR) != 0)

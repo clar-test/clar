@@ -17,15 +17,12 @@ is_valid_tmp_path(const char *path)
 static int
 find_tmp_path(char *buffer, size_t length)
 {
+#ifndef _WIN32
 	static const size_t var_count = 4;
 	static const char *env_vars[] = {
 		"TMPDIR", "TMP", "TEMP", "USERPROFILE"
  	};
 
-#ifdef _WIN32
-	if (GetTempPath((DWORD)length, buffer))
-		return 0;
-#else
  	size_t i;
 
 	for (i = 0; i < var_count; ++i) {
@@ -44,6 +41,10 @@ find_tmp_path(char *buffer, size_t length)
 		strncpy(buffer, "/tmp", length);
 		return 0;
 	}
+
+#else
+	if (GetTempPath((DWORD)length, buffer))
+		return 0;
 #endif
 
 	/* This system doesn't like us, try to use the current directory */
@@ -93,7 +94,7 @@ static int build_sandbox_path(void)
 
 	strncpy(_clay_path + len, path_tail, sizeof(_clay_path) - len);
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 	if (_mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
 		return -1;
 #elif __MINGW__
