@@ -96,7 +96,12 @@ static int build_sandbox_path(void)
 #ifdef _MSC_VER
 	if (_mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
 		return -1;
+#elif __MINGW__
+	if (mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
+		return -1;
+#endif
 
+#ifdef _WIN32
 	if (mkdir(_clay_path, 0700) != 0)
 		return -1;
 #else
