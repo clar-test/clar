@@ -30,6 +30,7 @@
 #		define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
 #		define W_OK 02
 #		define S_ISDIR(x) ((x & _S_IFDIR) != 0)
+#		define mktemp_s(path, len) _mktemp_s(path, len)
 #	endif
 	typedef struct _stat STAT_T;
 #else
