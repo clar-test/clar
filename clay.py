@@ -64,6 +64,7 @@ class ClayTestBuilder:
         for root, dirs, files in os.walk(self.path):
             module_root = root[len(self.path):]
             module_root = [c for c in module_root.split(os.sep) if c]
+            dirs.sort()
 
             tests_in_module = fnmatch.filter(files, "*.c")
             tests_in_module.sort()
