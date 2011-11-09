@@ -26,7 +26,7 @@ Can you count to funk?
     void test_adding__initialize()
     {
         answer = malloc(sizeof(int));
-        clay_assert(answer != NULL, "No memory left?");
+        cl_assert(answer != NULL, "No memory left?");
         *answer = 42;
     }
 
@@ -37,9 +37,9 @@ Can you count to funk?
 
     void test_adding__make_sure_math_still_works()
     {
-        clay_assert(5 > 3, "Five should probably be greater than three");
-        clay_assert(-5 < 2, "Negative numbers are small, I think");
-        clay_assert(*answer == 42, "The universe is doing OK. And the initializer too.");
+        cl_assert(5 > 3, "Five should probably be greater than three");
+        cl_assert(-5 < 2, "Negative numbers are small, I think");
+        cl_assert(*answer == 42, "The universe is doing OK. And the initializer too.");
     }
     ~~~~~
 
@@ -156,33 +156,33 @@ them on an embedded device or a platform where Python is not available.
 Clay makes the following methods available from all functions in a
 test suite.
 
--   `clay_must_pass(call, message)`: Verify that the given function call
+-   `cl_must_pass(call, message)`: Verify that the given function call
     passes, in the POSIX sense (returns a value greater or equal to 0).
 
--   `clay_must_fail(call, message)`: Verify that the given function call
+-   `cl_must_fail(call, message)`: Verify that the given function call
     fails, in the POSIX sense (returns a value less than 0). 
 
--   `clay_assert(expr, message)`: Verify that `expr` is true. 
+-   `cl_assert(expr, message)`: Verify that `expr` is true. 
 
--   `clay_check_pass(call, message)`: Verify that the given function call
+-   `cl_check_pass(call, message)`: Verify that the given function call
     passes, in the POSIX sense (returns a value greater or equal to 0). If
     the function call doesn't succeed, a test failure will be logged but the
     test's execution will continue.
 
--   `clay_check_fail(call, message)`: Verify that the given function call
+-   `cl_check_fail(call, message)`: Verify that the given function call
     fails, in the POSIX sense (returns a value less than 0). If the function
     call doesn't fail, a test failure will be logged but the test's execution
     will continue.
 
--   `clay_check(expr, message)`: Verify that `expr` is true. If `expr` is not
+-   `cl_check(expr, message)`: Verify that `expr` is true. If `expr` is not
     true, a test failure will be logged but the test's execution will continue.
 
--   `clay_fail(message)`: Fail the current test with the given message.
+-   `cl_fail(message)`: Fail the current test with the given message.
 
--   `clay_warning(message)`: Issue a warning. This warning will be
+-   `cl_warning(message)`: Issue a warning. This warning will be
     logged as a test failure but the test's execution will continue.
 
--   `clay_set_cleanup(void (*cleanup)(void *), void *opaque)`: Set the cleanup
+-   `cl_set_cleanup(void (*cleanup)(void *), void *opaque)`: Set the cleanup
     method for a single test. This method will be called with `opaque` as its
     argument before the test returns (even if the test has failed).
     If a global cleanup method is also available, the local cleanup will be
@@ -209,12 +209,12 @@ static int check_string(const char *str)
 
 void test_example__a_test_with_auxiliary_methods()
 {
-    clay_must_pass(
+    cl_must_pass(
         check_string("foo"),
         "String differs after processing"
     );
 
-    clay_must_pass(
+    cl_must_pass(
         check_string("bar"),
         "String differs after processing"
     );
@@ -227,12 +227,12 @@ static void check_string(const char *str)
 {
     const char *aux = process_string(str);
 
-    clay_assert(
+    cl_assert(
         aux != NULL,
         "String processing failed"
     );
 
-    clay_assert(
+    cl_assert(
         strcmp(my_function(aux), str) == 0,
         "String differs after processing"
     );
