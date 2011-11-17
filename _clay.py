@@ -6,7 +6,7 @@ import re, fnmatch, os
 
 VERSION = "0.8.0"
 
-TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\(\s*(void)?\s*\))\s*\{"
+TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\(\s*void\s*\))\s*\{"
 
 CLAY_HEADER = """
 /*
@@ -62,6 +62,8 @@ class ClayTestBuilder:
         print("Loading test suites...")
 
         for root, dirs, files in os.walk(self.path):
+            dirs.sort()
+
             module_root = root[len(self.path):]
             module_root = [c for c in module_root.split(os.sep) if c]
 
