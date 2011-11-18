@@ -25,7 +25,15 @@ if __name__ == '__main__':
 """
 
 if __name__ == '__main__':
-    clay_table = build_table(['clay.c', 'clay_sandbox.c', 'clay_fixtures.c', 'clay_fs.c', 'clay.h'])
+    clay_table = build_table([
+        'clay.c',
+        'clay_print_default.c',
+        'clay_print_tap.c',
+        'clay_sandbox.c',
+        'clay_fixtures.c',
+        'clay_fs.c',
+        'clay.h'
+    ])
 
     with open('_clay.py') as f:
         clay_source = f.read()

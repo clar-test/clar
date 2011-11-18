@@ -37,16 +37,16 @@ void cl_fixture_cleanup(const char *fixture_name);
 /**
  * Assertion macros with no error message
  */
-#define cl_must_pass(expr) cl_must_pass_((expr), NULL)
-#define cl_must_fail(expr) cl_must_fail_((expr), NULL)
-#define cl_assert(expr) cl_assert_((expr), NULL)
+#define cl_must_pass(expr) cl_must_pass_(expr, NULL)
+#define cl_must_fail(expr) cl_must_fail_(expr, NULL)
+#define cl_assert(expr) cl_assert_(expr, NULL)
 
 /**
  * Check macros with no error message
  */
-#define cl_check_pass(expr) cl_check_pass_((expr), NULL)
-#define cl_check_fail(expr) cl_check_fail_((expr), NULL)
-#define cl_check(expr) cl_check_((expr), NULL)
+#define cl_check_pass(expr) cl_check_pass_(expr, NULL)
+#define cl_check_fail(expr) cl_check_fail_(expr, NULL)
+#define cl_check(expr) cl_check_(expr, NULL)
 
 /**
  * Forced failure/warning
