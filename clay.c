@@ -255,9 +255,8 @@ clay_test(int argc, char **argv)
 	);
 
 	if (clay_sandbox() < 0) {
-		fprintf(stderr,
-			"Failed to sandbox the test runner.\n"
-			"Testing will proceed without sandboxing.\n");
+		clay_print_onabort("Failed to sandbox the test runner.\n");
+		exit(-1);
 	}
 
 	if (argc > 1) {
@@ -269,7 +268,7 @@ clay_test(int argc, char **argv)
 	}
 
 	clay_print_shutdown(
-		(int)_clay_callback_count,
+		_clay.test_count,
 		(int)_clay_suite_count,
 		_clay.total_errors
 	);
