@@ -4,7 +4,6 @@ static void clay_print_init(int test_count, int suite_count, const char *suite_n
 	(void)suite_names;
 	(void)suite_count;
 	printf("TAP version 13\n");
-	printf("1..%d\n", test_count);
 }
 
 static void clay_print_shutdown(int test_count, int suite_count, int error_count)
@@ -13,7 +12,12 @@ static void clay_print_shutdown(int test_count, int suite_count, int error_count
 	(void)suite_count;
 	(void)error_count;
 
-	printf("\n");
+	if (!error_count)
+		printf("# passed all %d test(s)\n", test_count);
+	else
+		printf("# failed %d among %d test(s)\n", error_count,
+			test_count);
+	printf("1..%d\n", test_count);
 }
 
 static void clay_print_error(int num, const struct clay_error *error)
