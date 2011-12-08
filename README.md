@@ -23,23 +23,23 @@ Can you count to funk?
 
     static int *answer;
 
-    void test_adding__initialize()
+    void test_adding__initialize(void)
     {
         answer = malloc(sizeof(int));
-        cl_assert(answer != NULL, "No memory left?");
+        cl_assert_(answer != NULL, "No memory left?");
         *answer = 42;
     }
 
-    void test_adding__cleanup()
+    void test_adding__cleanup(void)
     {
         free(answer);
     }
 
-    void test_adding__make_sure_math_still_works()
+    void test_adding__make_sure_math_still_works(void)
     {
-        cl_assert(5 > 3, "Five should probably be greater than three");
-        cl_assert(-5 < 2, "Negative numbers are small, I think");
-        cl_assert(*answer == 42, "The universe is doing OK. And the initializer too.");
+        cl_assert_(5 > 3, "Five should probably be greater than three");
+        cl_assert_(-5 < 2, "Negative numbers are small, I think");
+        cl_assert_(*answer == 42, "The universe is doing OK. And the initializer too.");
     }
     ~~~~~
 
@@ -156,25 +156,26 @@ them on an embedded device or a platform where Python is not available.
 Clay makes the following methods available from all functions in a
 test suite.
 
--   `cl_must_pass(call, message)`: Verify that the given function call
-    passes, in the POSIX sense (returns a value greater or equal to 0).
+-   `cl_must_pass(call)`, `cl_must_pass_(call, message)`: Verify that the given
+    function call passes, in the POSIX sense (returns a value greater or equal
+    to 0).
 
--   `cl_must_fail(call, message)`: Verify that the given function call
-    fails, in the POSIX sense (returns a value less than 0). 
+-   `cl_must_fail(call)`, `cl_must_fail_(call, message)`: Verify that the given
+    function call fails, in the POSIX sense (returns a value less than 0).
 
--   `cl_assert(expr, message)`: Verify that `expr` is true. 
+-   `cl_assert(expr)`, `cl_assert_(expr, message)`: Verify that `expr` is true.
 
--   `cl_check_pass(call, message)`: Verify that the given function call
-    passes, in the POSIX sense (returns a value greater or equal to 0). If
-    the function call doesn't succeed, a test failure will be logged but the
-    test's execution will continue.
+-   `cl_check_pass(call)`, `cl_check_pass_(call, message)`: Verify that the
+    given function call passes, in the POSIX sense (returns a value greater or
+    equal to 0). If the function call doesn't succeed, a test failure will be
+    logged but the test's execution will continue.
 
--   `cl_check_fail(call, message)`: Verify that the given function call
-    fails, in the POSIX sense (returns a value less than 0). If the function
-    call doesn't fail, a test failure will be logged but the test's execution
-    will continue.
+-   `cl_check_fail(call)`, `cl_check_fail_(call, message)`: Verify that the
+    given function call fails, in the POSIX sense (returns a value less than
+    0). If the function call doesn't fail, a test failure will be logged but
+    the test's execution will continue.
 
--   `cl_check(expr, message)`: Verify that `expr` is true. If `expr` is not
+-   `cl_check(expr)`: Verify that `expr` is true. If `expr` is not
     true, a test failure will be logged but the test's execution will continue.
 
 -   `cl_fail(message)`: Fail the current test with the given message.
@@ -207,14 +208,14 @@ static int check_string(const char *str)
     return strcmp(my_function(aux), str) == 0 ? 0 : -1;
 }
 
-void test_example__a_test_with_auxiliary_methods()
+void test_example__a_test_with_auxiliary_methods(void)
 {
-    cl_must_pass(
+    cl_must_pass_(
         check_string("foo"),
         "String differs after processing"
     );
 
-    cl_must_pass(
+    cl_must_pass_(
         check_string("bar"),
         "String differs after processing"
     );
@@ -227,18 +228,18 @@ static void check_string(const char *str)
 {
     const char *aux = process_string(str);
 
-    cl_assert(
+    cl_assert_(
         aux != NULL,
         "String processing failed"
     );
 
-    cl_assert(
+    cl_assert_(
         strcmp(my_function(aux), str) == 0,
         "String differs after processing"
     );
 }
 
-void test_example__a_test_with_auxiliary_methods()
+void test_example__a_test_with_auxiliary_methods(void)
 {
     check_string("foo");
     check_string("bar");
@@ -249,7 +250,7 @@ About
 =====
 
 Clay has been written from scratch by Vicent Martí, to replace the old testing
-framework in [libgit2][libgit2]. 
+framework in [libgit2][libgit2].
 
 Do you know what languages are *in* on the SF startup scene? Node.js *and* Latin.
 Follow [@tanoku](https://www.twitter.com/tanoku) on Twitter to receive more lessons
