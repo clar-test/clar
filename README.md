@@ -246,6 +246,21 @@ void test_example__a_test_with_auxiliary_methods(void)
 }
 ~~~~
 
+Global Events
+=============
+
+If Clay detects any of the following functions declared in any of the
+parsed suite files, they will be treated as global event callbacks and
+issued on the corresponding events.
+
+- `void clay_on_init()`: will be called as soon as Clay is initialized
+- `void clay_on_shutdown()`: will be called beofre Clay shutdowns
+- `void clay_on_test()`: will be called right before each test
+- `void clay_on_suite()`: will be called right before each suite
+
+These are useful when you are testing a library that has a global initializer
+or the likes.
+
 About
 =====
 

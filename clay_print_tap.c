@@ -1,6 +1,7 @@
 
 static void clay_print_init(int test_count, int suite_count, const char *suite_names)
 {
+	(void)test_count;
 	(void)suite_names;
 	(void)suite_count;
 	printf("TAP version 13\n");
