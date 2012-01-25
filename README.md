@@ -1,15 +1,15 @@
-Come out and Clay
+Come out and Clar
 =================
 
 Did you know that the word "test" has its roots in the latin word *"testum"*, meaning
-"earthen pot", and *"testa"*,  meaning "piece of burned clay"?
+"earthen pot", and *"testa"*,  meaning "piece of burned clar"?
 
 This is because historically, testing implied melting metal in a pot to check its quality.
-Clay is what tests are made of.
+Clar is what tests are made of.
 
 ## Usage Overview
 
-Clay is a minimal C unit testing framework. It's been written to replace the old
+Clar is a minimal C unit testing framework. It's been written to replace the old
 framework in [libgit2][libgit2], but it's both very versatile
 and straightforward to use.
 
@@ -19,7 +19,7 @@ Can you count to funk?
 
     ~~~~ c
     /* adding.c for the "Adding" suite */
-    #include "clay.h"
+    #include "clar.h"
 
     static int *answer;
 
@@ -43,24 +43,24 @@ Can you count to funk?
     }
     ~~~~~
 
-- **Two: Mix them with Clay**
+- **Two: Mix them with Clar**
 
-        $ ./clay.py .
+        $ ./clar.py .
 
         Loading test suites...
           adding.c: 1 tests
-        Written test suite to "./clay_main.c"
-        Written header to "./clay.h"
+        Written test suite to "./clar_main.c"
+        Written header to "./clar.h"
 
 - **Three: Build the test executable**
 
-        $ gcc clay_main.c adding.c -o testit
+        $ gcc clar_main.c adding.c -o testit
 
 - **Funk: Funk it.**
 
         $ ./testit
 
-## The Clay Test Suite
+## The Clar Test Suite
 
 Writing a test suite is pretty straighforward. Each test suite is a `*.c` file
 with a descriptive name: this encourages modularity.
@@ -112,17 +112,17 @@ void test_status__simple_test(void)
 
 Writing the actual tests is just as straightforward. Tests have the
 `void test_suitename__test_name(void)` signature, and they should **not**
-be static. Clay will automatically detect and list them.
+be static. Clar will automatically detect and list them.
 
 Tests are run as they appear on their original suites: they have no return
 value. A test is considered "passed" if it doesn't raise any errors. Check
-the "Clay API" section to see the various helper functions to check and raise
+the "Clar API" section to see the various helper functions to check and raise
 errors during test execution.
 
 
-## The Clay Mixer
+## The Clar Mixer
 
-The Clay mixer, also known as `clay.py` is the only file needed to use Clay.
+The Clar mixer, also known as `clar.py` is the only file needed to use Clar.
 
 The mixer is a Python script with embedded resources, which automatically generates
 all the files required to build a test suite. No external files need to be copied
@@ -132,28 +132,28 @@ The mixer can be run with **Python 2.5, 2.6, 2.7, 3.0, 3.1, 3.2 and PyPy 1.6**.
 
 Commandline usage is as follows:
 
-    $ ./clay.py .
+    $ ./clar.py .
 
 Where `.` is the folder where all the test suites can be found. The mixer will
 automatically locate all the relevant source files and build the testing boilerplate.
 
-The testing boilerplate will be written to `clay_main.c`, in the same folder as all
+The testing boilerplate will be written to `clar_main.c`, in the same folder as all
 the test suites. This boilerplate has no dependencies whatsoever: building together
 this file with the rest of the suites will generate a fully functional test executable.
 
-    $ gcc -I. clay_main.c suite1.c test2.c -o run_tests
+    $ gcc -I. clar_main.c suite1.c test2.c -o run_tests
 
-**Do note that the Clay mixer only needs to be ran when adding new tests to a suite,
-in order to regenerate the boilerplate**. Consequently, the `clay_main.c` boilerplate can
+**Do note that the Clar mixer only needs to be ran when adding new tests to a suite,
+in order to regenerate the boilerplate**. Consequently, the `clar_main.c` boilerplate can
 be checked in version control to allow building the test suite without any prior processing.
 
 This is handy when e.g. generating tests in a local computer, and then building and testing
 them on an embedded device or a platform where Python is not available.
 
 
-## The Clay API
+## The Clar API
 
-Clay makes the following methods available from all functions in a
+Clar makes the following methods available from all functions in a
 test suite.
 
 -   `cl_must_pass(call)`, `cl_must_pass_(call, message)`: Verify that the given
@@ -249,14 +249,14 @@ void test_example__a_test_with_auxiliary_methods(void)
 Global Events
 =============
 
-If Clay detects any of the following functions declared in any of the
+If Clar detects any of the following functions declared in any of the
 parsed suite files, they will be treated as global event callbacks and
 issued on the corresponding events.
 
-- `void clay_on_init()`: will be called as soon as Clay is initialized
-- `void clay_on_shutdown()`: will be called beofre Clay shutdowns
-- `void clay_on_test()`: will be called right before each test
-- `void clay_on_suite()`: will be called right before each suite
+- `void clar_on_init()`: will be called as soon as Clar is initialized
+- `void clar_on_shutdown()`: will be called beofre Clar shutdowns
+- `void clar_on_test()`: will be called right before each test
+- `void clar_on_suite()`: will be called right before each suite
 
 These are useful when you are testing a library that has a global initializer
 or the likes.
@@ -264,7 +264,7 @@ or the likes.
 About
 =====
 
-Clay has been written from scratch by Vicent Martí, to replace the old testing
+Clar has been written from scratch by Vicent Martí, to replace the old testing
 framework in [libgit2][libgit2].
 
 Do you know what languages are *in* on the SF startup scene? Node.js *and* Latin.

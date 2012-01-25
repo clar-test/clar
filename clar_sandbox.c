@@ -1,4 +1,4 @@
-static char _clay_path[4096];
+static char _clar_path[4096];
 
 static int
 is_valid_tmp_path(const char *path)
@@ -56,64 +56,64 @@ find_tmp_path(char *buffer, size_t length)
 	return -1;
 }
 
-static void clay_unsandbox(void)
+static void clar_unsandbox(void)
 {
-	if (_clay_path[0] == '\0')
+	if (_clar_path[0] == '\0')
 		return;
 
 #ifdef _WIN32
 	chdir("..");
 #endif
 
-	fs_rm(_clay_path);
+	fs_rm(_clar_path);
 }
 
 static int build_sandbox_path(void)
 {
-	const char path_tail[] = "clay_tmp_XXXXXX";
+	const char path_tail[] = "clar_tmp_XXXXXX";
 	size_t len;
 
-	if (find_tmp_path(_clay_path, sizeof(_clay_path)) < 0)
+	if (find_tmp_path(_clar_path, sizeof(_clar_path)) < 0)
 		return -1;
 
-	len = strlen(_clay_path);
+	len = strlen(_clar_path);
 
 #ifdef _WIN32
 	{ /* normalize path to POSIX forward slashes */
 		size_t i;
 		for (i = 0; i < len; ++i) {
-			if (_clay_path[i] == '\\')
-				_clay_path[i] = '/';
+			if (_clar_path[i] == '\\')
+				_clar_path[i] = '/';
 		}
 	}
 #endif
 
-	if (_clay_path[len - 1] != '/') {
-		_clay_path[len++] = '/';
+	if (_clar_path[len - 1] != '/') {
+		_clar_path[len++] = '/';
 	}
 
-	strncpy(_clay_path + len, path_tail, sizeof(_clay_path) - len);
+	strncpy(_clar_path + len, path_tail, sizeof(_clar_path) - len);
 
 #ifdef _WIN32
-	if (mktemp_s(_clay_path, sizeof(_clay_path)) != 0)
+	if (mktemp_s(_clar_path, sizeof(_clar_path)) != 0)
 		return -1;
 
-	if (mkdir(_clay_path, 0700) != 0)
+	if (mkdir(_clar_path, 0700) != 0)
 		return -1;
 #else
-	if (mkdtemp(_clay_path) == NULL)
+	if (mkdtemp(_clar_path) == NULL)
 		return -1;
 #endif
 
 	return 0;
 }
 
-static int clay_sandbox(void)
+static int clar_sandbox(void)
 {
-	if (_clay_path[0] == '\0' && build_sandbox_path() < 0)
+	if (_clar_path[0] == '\0' && build_sandbox_path() < 0)
 		return -1;
 
-	if (chdir(_clay_path) != 0)
+	if (chdir(_clar_path) != 0)
 		return -1;
 
 	return 0;

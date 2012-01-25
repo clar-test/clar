@@ -14,31 +14,31 @@ def decompress_file(content):
     return zlib.decompress(base64.b64decode(content))
 
 def build_table(filenames):
-    table = "\n\nCLAY_FILES = {\n"
+    table = "\n\nCLAR_FILES = {\n"
     table += ",\n".join(compress_file(f) for f in filenames)
     table += "\n}"
     return table
 
-CLAY_FOOTER = """
+CLAR_FOOTER = """
 if __name__ == '__main__':
     main()
 """
 
 if __name__ == '__main__':
-    clay_table = build_table([
-        'clay.c',
-        'clay_print_default.c',
-        'clay_print_tap.c',
-        'clay_sandbox.c',
-        'clay_fixtures.c',
-        'clay_fs.c',
-        'clay.h'
+    clar_table = build_table([
+        'clar.c',
+        'clar_print_default.c',
+        'clar_print_tap.c',
+        'clar_sandbox.c',
+        'clar_fixtures.c',
+        'clar_fs.c',
+        'clar.h'
     ])
 
-    with open('_clay.py') as f:
-        clay_source = f.read()
+    with open('_clar.py') as f:
+        clar_source = f.read()
 
-    with open('clay.py', 'w') as f:
-        f.write(clay_source)
-        f.write(clay_table)
-        f.write(CLAY_FOOTER)
+    with open('clar.py', 'w') as f:
+        f.write(clar_source)
+        f.write(clar_table)
+        f.write(CLAR_FOOTER)

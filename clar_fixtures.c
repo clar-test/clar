@@ -20,19 +20,19 @@ fixture_path(const char *base, const char *fixture_name)
 	return _path;
 }
 
-#ifdef CLAY_FIXTURE_PATH
+#ifdef CLAR_FIXTURE_PATH
 const char *cl_fixture(const char *fixture_name)
 {
-	return fixture_path(CLAY_FIXTURE_PATH, fixture_name);
+	return fixture_path(CLAR_FIXTURE_PATH, fixture_name);
 }
 
 void cl_fixture_sandbox(const char *fixture_name)
 {
-	fs_copy(cl_fixture(fixture_name), _clay_path);
+	fs_copy(cl_fixture(fixture_name), _clar_path);
 }
 
 void cl_fixture_cleanup(const char *fixture_name)
 {
-	fs_rm(fixture_path(_clay_path, fixture_name));
+	fs_rm(fixture_path(_clar_path, fixture_name));
 }
 #endif

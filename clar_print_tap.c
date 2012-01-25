@@ -1,5 +1,5 @@
 
-static void clay_print_init(int test_count, int suite_count, const char *suite_names)
+static void clar_print_init(int test_count, int suite_count, const char *suite_names)
 {
 	(void)test_count;
 	(void)suite_names;
@@ -7,7 +7,7 @@ static void clay_print_init(int test_count, int suite_count, const char *suite_n
 	printf("TAP version 13\n");
 }
 
-static void clay_print_shutdown(int test_count, int suite_count, int error_count)
+static void clar_print_shutdown(int test_count, int suite_count, int error_count)
 {
 	(void)test_count;
 	(void)suite_count;
@@ -21,7 +21,7 @@ static void clay_print_shutdown(int test_count, int suite_count, int error_count
 	printf("1..%d\n", test_count);
 }
 
-static void clay_print_error(int num, const struct clay_error *error)
+static void clar_print_error(int num, const struct clar_error *error)
 {
 	(void)num;
 
@@ -39,7 +39,7 @@ static void clay_print_error(int num, const struct clay_error *error)
 	printf("  ...\n");
 }
 
-static void clay_print_ontest(const char *test_name, int test_number, int failed)
+static void clar_print_ontest(const char *test_name, int test_number, int failed)
 {
 	printf("%s %d - %s\n",
 		failed ? "not ok" : "ok",
@@ -47,15 +47,15 @@ static void clay_print_ontest(const char *test_name, int test_number, int failed
 		test_name
 	);
 
-	clay_report_errors();
+	clar_report_errors();
 }
 
-static void clay_print_onsuite(const char *suite_name)
+static void clar_print_onsuite(const char *suite_name)
 {
 	printf("# *** %s ***\n", suite_name);
 }
 
-static void clay_print_onabort(const char *msg, ...)
+static void clar_print_onabort(const char *msg, ...)
 {
 	va_list argp;
 	va_start(argp, msg);

@@ -68,7 +68,7 @@ fs_copy(const char *_source, const char *_dest)
 void
 cl_fs_cleanup(void)
 {
-	fs_rm(fixture_path(_clay_path, "*"));
+	fs_rm(fixture_path(_clar_path, "*"));
 }
 
 #else
@@ -140,7 +140,7 @@ fs_rm(const char *source)
 void
 cl_fs_cleanup(void)
 {
-	clay_unsandbox();
-	clay_sandbox();
+	clar_unsandbox();
+	clar_sandbox();
 }
 #endif
