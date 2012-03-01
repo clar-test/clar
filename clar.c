@@ -334,6 +334,38 @@ clar__assert(
 	}
 }
 
+void clar__assert_equal_s(
+	const char *s1,
+	const char *s2,
+	const char *file,
+	int line,
+	const char *err,
+	int should_abort)
+{
+	int match = (s1 == NULL || s2 == NULL) ? (s1 == s2) : (strcmp(s1, s2) == 0);
+
+	if (!match) {
+		char buf[4096];
+		snprintf(buf, 4096, "'%s' != '%s'", s1, s2);
+		clar__assert(0, file, line, err, buf, should_abort);
+	}
+}
+
+void clar__assert_equal_i(
+	int i1,
+	int i2,
+	const char *file,
+	int line,
+	const char *err,
+	int should_abort)
+{
+	if (i1 != i2) {
+		char buf[128];
+		snprintf(buf, 128, "%d != %d", i1, i2);
+		clar__assert(0, file, line, err, buf, should_abort);
+	}
+}
+
 void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 {
 	_clar.local_cleanup = cleanup;
