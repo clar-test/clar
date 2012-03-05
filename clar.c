@@ -68,6 +68,8 @@ static struct {
 
 	int test_count;
 
+	int report_errors_only;
+
 	struct clar_error *errors;
 	struct clar_error *last_error;
 
@@ -118,6 +120,24 @@ static size_t _clar_callback_count = ${clar_callback_count};
 
 /* Core test functions */
 static void
+clar_report_errors(void)
+{
+	int i = 1;
+	struct clar_error *error, *next;
+
+	error = _clar.errors;
+	while (error != NULL) {
+		next = error->next;
+		clar_print_error(i++, error);
+		free(error->description);
+		free(error);
+		error = next;
+	}
+
+	_clar.errors = _clar.last_error = NULL;
+}
+
+static void
 clar_run_test(
 	const struct clar_func *test,
 	const struct clar_func *initialize,
@@ -149,29 +169,14 @@ clar_run_test(
 	_clar.local_cleanup = NULL;
 	_clar.local_cleanup_payload = NULL;
 
-	clar_print_ontest(
-		test->name,
-		_clar.test_count,
-		(_clar.suite_errors > error_st)
-	);
-}
-
-static void
-clar_report_errors(void)
-{
-	int i = 1;
-	struct clar_error *error, *next;
-
-	error = _clar.errors;
-	while (error != NULL) {
-		next = error->next;
-		clar_print_error(i++, error);
-		free(error->description);
-		free(error);
-		error = next;
-	}
-
-	_clar.errors = _clar.last_error = NULL;
+	if (_clar.report_errors_only)
+		clar_report_errors();
+	else
+		clar_print_ontest(
+			test->name,
+			_clar.test_count,
+			(_clar.suite_errors > error_st)
+			);
 }
 
 static void
@@ -180,7 +185,8 @@ clar_run_suite(const struct clar_suite *suite)
 	const struct clar_func *test = suite->tests;
 	size_t i;
 
-	clar_print_onsuite(suite->name);
+	if (!_clar.report_errors_only)
+		clar_print_onsuite(suite->name);
 	clar_on_suite();
 
 	_clar.active_suite = suite->name;
@@ -222,26 +228,25 @@ clar_parse_args(int argc, char **argv)
 
 	for (i = 1; i < argc; ++i) {
 		char *argument = argv[i];
-		char action;
-		int num;
 
 		if (argument[0] != '-')
 			clar_usage(argv[0]);
 
-		action = argument[1];
-		num = strtol(argument + 2, &argument, 10);
-
-		if (*argument != '\0' || num < 0)
-			clar_usage(argv[0]);
-
-		switch (action) {
-		case 's':
+		switch (argument[1]) {
+		case 's': {
+			int num = strtol(argument + 2, &argument, 10);
+			if (*argument != '\0' || num < 0)
+				clar_usage(argv[0]);
 			if ((size_t)num >= _clar_suite_count) {
 				clar_print_onabort("Suite number %d does not exist.\n", num);
 				exit(-1);
 			}
-
 			clar_run_suite(&_clar_suites[num]);
+			break;
+		}
+
+		case 'q':
+			_clar.report_errors_only = 1;
 			break;
 
 		default:
@@ -266,9 +271,10 @@ clar_test(int argc, char **argv)
 
 	clar_on_init();
 
-	if (argc > 1) {
+	if (argc > 1)
 		clar_parse_args(argc, argv);
-	} else {
+
+	if (_clar.active_suite == NULL) {
 		size_t i;
 		for (i = 0; i < _clar_suite_count; ++i)
 			clar_run_suite(&_clar_suites[i]);
