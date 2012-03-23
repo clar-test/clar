@@ -87,7 +87,7 @@ class ClarTestBuilder:
 
         if not self.suite_data:
             raise RuntimeError(
-                'No tests found under "%s"' % folder_name)
+                'No tests found under "%s"' % path)
 
     def render(self):
         main_file = os.path.join(self.path, 'clar_main.c')
