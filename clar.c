@@ -23,7 +23,7 @@
 #	define chdir(path) _chdir(path)
 #	define access(path, mode) _access(path, mode)
 #	define strdup(str) _strdup(str)
-#	define snprintf _snprintf
+#	define snprint_eq(buf,sz,fmt,a,b) _snprintf_s(buf,sz,_TRUNCATE,fmt,a,b)
 
 #	ifndef __MINGW32__
 #		pragma comment(lib, "shell32")
@@ -37,6 +37,7 @@
 #	include <sys/wait.h> /* waitpid(2) */
 #	include <unistd.h>
 #	define _MAIN_CC
+#	define snprint_eq snprintf
 	typedef struct stat STAT_T;
 #endif
 
@@ -353,7 +354,7 @@ void clar__assert_equal_s(
 
 	if (!match) {
 		char buf[4096];
-		snprintf(buf, 4096, "'%s' != '%s'", s1, s2);
+		snprint_eq(buf, 4096, "'%s' != '%s'", s1, s2);
 		clar__assert(0, file, line, err, buf, should_abort);
 	}
 }
@@ -368,7 +369,7 @@ void clar__assert_equal_i(
 {
 	if (i1 != i2) {
 		char buf[128];
-		snprintf(buf, 128, "%d != %d", i1, i2);
+		snprint_eq(buf, 128, "%d != %d", i1, i2);
 		clar__assert(0, file, line, err, buf, should_abort);
 	}
 }
