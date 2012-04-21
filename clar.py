@@ -214,7 +214,7 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
                 content = bytearray(content, 'utf_8')
                 content = base64.b64decode(content)
                 content = zlib.decompress(content)
-                return str(content)
+                return str(content, 'utf-8')
             else:
                 content = base64.b64decode(content)
                 return zlib.decompress(content)

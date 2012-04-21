@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 
 from __future__ import with_statement
-import base64, zlib, re
+import base64, zlib, re, sys
 
 def compress_file(filename):
     with open(filename) as f:
         contents = f.read()
 
-    bin = zlib.compress(contents)
-    return ('"%s" : r"""' % filename) + base64.b64encode(bin) + '"""'
+    if sys.version_info >= (3, 0):
+        bin = zlib.compress(bytes(contents, 'utf-8'))
+        return ('"%s" : r"""' % filename) + base64.b64encode(bin).decode('utf-8') + '"""'
+    else:
+        bin = zlib.compress(contents)
+        return ('"%s" : r"""' % filename) + base64.b64encode(bin) + '"""'
 
 def decompress_file(content):
     return zlib.decompress(base64.b64decode(content))
