@@ -23,14 +23,15 @@
 #	define chdir(path) _chdir(path)
 #	define access(path, mode) _access(path, mode)
 #	define strdup(str) _strdup(str)
-#	define snprint_eq(buf,sz,fmt,a,b) _snprintf_s(buf,sz,_TRUNCATE,fmt,a,b)
 
 #	ifndef __MINGW32__
 #		pragma comment(lib, "shell32")
 #		define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
 #		define W_OK 02
 #		define S_ISDIR(x) ((x & _S_IFDIR) != 0)
-#		define mktemp_s(path, len) _mktemp_s(path, len)
+#		define snprint_eq(buf,sz,fmt,a,b) _snprintf_s(buf,sz,_TRUNCATE,fmt,a,b)
+#	else
+#		define snprint_eq snprintf
 #	endif
 	typedef struct _stat STAT_T;
 #else
