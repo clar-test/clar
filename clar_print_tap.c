@@ -50,9 +50,9 @@ static void clar_print_ontest(const char *test_name, int test_number, int failed
 	clar_report_errors();
 }
 
-static void clar_print_onsuite(const char *suite_name)
+static void clar_print_onsuite(const char *suite_name, int suite_index)
 {
-	printf("# *** %s ***\n", suite_name);
+	printf("# *** %s (#%d) ***\n", suite_name, suite_index);
 }
 
 static void clar_print_onabort(const char *msg, ...)

@@ -43,9 +43,10 @@ static void clar_print_ontest(const char *test_name, int test_number, int failed
 	printf("%c", failed ? 'F' : '.');
 }
 
-static void clar_print_onsuite(const char *suite_name)
+static void clar_print_onsuite(const char *suite_name, int suite_index)
 {
 	/* noop */
+	(void)suite_index;
 	(void)suite_name;
 }
 

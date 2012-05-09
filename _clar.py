@@ -107,10 +107,11 @@ class ClarTestBuilder:
     def _render_cb(self, cb):
         return '{"%s", &%s}' % (cb['short_name'], cb['symbol'])
 
-    def _render_suite(self, suite):
+    def _render_suite(self, suite, index):
         template = Template(
 r"""
     {
+        ${suite_index},
         "${clean_name}",
         ${initialize},
         ${cleanup},
@@ -124,6 +125,7 @@ r"""
                 if suite[cb] else "{NULL, NULL}")
 
         return template.substitute(
+            suite_index = index,
             clean_name = suite['name'].replace("_", "::"),
             initialize = callbacks['initialize'],
             cleanup = callbacks['cleanup'],
@@ -178,8 +180,8 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
         suite_names = sorted(self.suite_names)
 
         suite_data = [
-            self._render_suite(self.suite_data[s])
-            for s in suite_names
+            self._render_suite(self.suite_data[s], i)
+            for i, s in enumerate(suite_names)
         ]
 
         callbacks = [
