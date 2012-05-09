@@ -89,6 +89,7 @@ struct clar_func {
 };
 
 struct clar_suite {
+	int index;
 	const char *name;
 	struct clar_func initialize;
 	struct clar_func cleanup;
@@ -101,7 +102,7 @@ static void clar_print_init(int test_count, int suite_count, const char *suite_n
 static void clar_print_shutdown(int test_count, int suite_count, int error_count);
 static void clar_print_error(int num, const struct clar_error *error);
 static void clar_print_ontest(const char *test_name, int test_number, int failed);
-static void clar_print_onsuite(const char *suite_name);
+static void clar_print_onsuite(const char *suite_name, int suite_index);
 static void clar_print_onabort(const char *msg, ...);
 
 /* From clar_sandbox.c */
@@ -189,7 +190,7 @@ clar_run_suite(const struct clar_suite *suite)
 	size_t i;
 
 	if (!_clar.report_errors_only)
-		clar_print_onsuite(suite->name);
+		clar_print_onsuite(suite->name, suite->index);
 	clar_on_suite();
 
 	_clar.active_suite = suite->name;
@@ -219,8 +220,8 @@ clar_usage(const char *arg)
 {
 	printf("Usage: %s [options]\n\n", arg);
 	printf("Options:\n");
-//	printf("  -tXX\t\tRun only the test number XX\n");
-	printf("  -sXX\t\tRun only the suite number XX\n");
+	printf("  -sXX\t\tRun only the suite number or name XX\n");
+	printf("  -q  \t\tOnly report tests that had an error\n");
 	exit(-1);
 }
 
@@ -237,8 +238,17 @@ clar_parse_args(int argc, char **argv)
 
 		switch (argument[1]) {
 		case 's': {
-			int num = strtol(argument + 2, &argument, 10);
-			if (*argument != '\0' || num < 0)
+			int num = (int)strtol(argument + 2, &argument, 10);
+			if (argument == argv[i] + 2) {
+				size_t j;
+				num = -1;
+				for (j = 0; j < _clar_suite_count; ++j)
+					if (strcmp(argument, _clar_suites[j].name) == 0) {
+						num = j;
+						break;
+					}
+			}
+			if (num < 0)
 				clar_usage(argv[0]);
 			if ((size_t)num >= _clar_suite_count) {
 				clar_print_onabort("Suite number %d does not exist.\n", num);
