@@ -346,6 +346,7 @@ clar__assert(
 		if (!_clar.trampoline_enabled) {
 			clar_print_onabort(
 				"Fatal error: a cleanup method raised an exception.");
+			clar_report_errors();
 			exit(-1);
 		}
 
