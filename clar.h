@@ -23,6 +23,8 @@ void cl_fixture_sandbox(const char *fixture_name);
 void cl_fixture_cleanup(const char *fixture_name);
 #endif
 
+void cl_in_category(const char *category);
+
 /**
  * Assertion macros with explicit error message
  */

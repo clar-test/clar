@@ -65,7 +65,8 @@ class ClarTestBuilder:
         self.modules = [
             "clar_sandbox.c",
             "clar_fixtures.c",
-            "clar_fs.c"
+            "clar_fs.c",
+            "clar_categorize.c",
         ]
 
         self.modules.append("clar_print_%s.c" % print_mode)
@@ -113,6 +114,7 @@ r"""
     {
         ${suite_index},
         "${clean_name}",
+        ${categorize},
         ${initialize},
         ${cleanup},
         ${cb_ptr}, ${cb_count}
@@ -120,13 +122,14 @@ r"""
 """)
 
         callbacks = {}
-        for cb in ['initialize', 'cleanup']:
+        for cb in ['categorize', 'initialize', 'cleanup']:
             callbacks[cb] = (self._render_cb(suite[cb])
                 if suite[cb] else "{NULL, NULL}")
 
         return template.substitute(
             suite_index = index,
             clean_name = suite['name'].replace("_", "::"),
+            categorize = callbacks['categorize'],
             initialize = callbacks['initialize'],
             cleanup = callbacks['cleanup'],
             cb_ptr = "_clar_cb_%s" % suite['name'],
@@ -143,7 +146,7 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
         callbacks = [
             self._render_cb(cb)
             for cb in callbacks
-            if cb['short_name'] not in ('initialize', 'cleanup')
+            if cb['short_name'] not in ('categorize', 'initialize', 'cleanup')
         ]
 
         return template.substitute(
@@ -247,7 +250,7 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
 
     def _process_declarations(self, suite_name, contents):
         callbacks = []
-        initialize = cleanup = None
+        categorize = initialize = cleanup = None
 
         regex_string = TEST_FUNC_REGEX % suite_name
         regex = re.compile(regex_string, re.MULTILINE)
@@ -259,6 +262,8 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
                 "symbol" : symbol
             }
 
+            if short_name == 'categorize':
+                categorize = data
             if short_name == 'initialize':
                 initialize = data
             elif short_name == 'cleanup':
@@ -273,10 +278,14 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
 
         suite = {
             "name" : suite_name,
+            "categorize" : categorize,
             "initialize" : initialize,
             "cleanup" : cleanup,
             "cb_count" : tests_in_suite
         }
+
+        if categorize:
+            self.declarations.append(categorize['declaration'])
 
         if initialize:
             self.declarations.append(initialize['declaration'])

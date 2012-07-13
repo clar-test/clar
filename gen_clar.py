@@ -36,6 +36,7 @@ if __name__ == '__main__':
         'clar_sandbox.c',
         'clar_fixtures.c',
         'clar_fs.c',
+        'clar_categorize.c',
         'clar.h'
     ])
 

@@ -91,6 +91,7 @@ struct clar_func {
 struct clar_suite {
 	int index;
 	const char *name;
+	struct clar_func categorize;
 	struct clar_func initialize;
 	struct clar_func cleanup;
 	const struct clar_func *tests;
@@ -108,6 +109,12 @@ static void clar_print_onabort(const char *msg, ...);
 /* From clar_sandbox.c */
 static void clar_unsandbox(void);
 static int clar_sandbox(void);
+
+/* From clar_categorize.c */
+static int clar_category_is_suite_enabled(const struct clar_suite *suite);
+static void clar_category_enable(const char *category);
+static void clar_category_setup_print(void);
+static void clar_category_print(const char *prefix);
 
 /* Event callback overrides */
 ${clar_event_overrides}
@@ -189,6 +196,9 @@ clar_run_suite(const struct clar_suite *suite)
 	const struct clar_func *test = suite->tests;
 	size_t i;
 
+	if (!clar_category_is_suite_enabled(suite))
+		return;
+
 	if (!_clar.report_errors_only)
 		clar_print_onsuite(suite->name, suite->index);
 	clar_on_suite();
@@ -222,6 +232,8 @@ clar_usage(const char *arg)
 	printf("Options:\n");
 	printf("  -sXX\t\tRun only the suite number or name XX\n");
 	printf("  -q  \t\tOnly report tests that had an error\n");
+	printf("  -i<name>\tInclude category <name> tests\n");
+	printf("  -l  \t\tPrint suite names and category names\n");
 	exit(-1);
 }
 
@@ -261,6 +273,26 @@ clar_parse_args(int argc, char **argv)
 		case 'q':
 			_clar.report_errors_only = 1;
 			break;
+
+		case 'i': {
+			int offset = (argv[i][2] == '=') ? 3 : 2;
+			clar_category_enable(argv[i] + offset);
+			break;
+		}
+
+		case 'l': {
+			size_t j;
+			printf("Test suites (use -s<name> to run just one):\n");
+			clar_category_setup_print();
+			for (j = 0; j < _clar_suite_count; ++j) {
+				printf(" %3d: %s\n", (int)j, _clar_suites[j].name);
+				if (_clar_suites[j].categorize.ptr)
+					_clar_suites[j].categorize.ptr();
+			}
+			printf("\nCategories (use -i<category> to include):\n");
+			clar_category_print(" - ");
+			exit(0);
+		}
 
 		default:
 			clar_usage(argv[0]);
