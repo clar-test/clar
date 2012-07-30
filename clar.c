@@ -72,6 +72,7 @@ static struct {
 	int test_count;
 
 	int report_errors_only;
+	int exit_on_error;
 
 	struct clar_error *errors;
 	struct clar_error *last_error;
@@ -199,6 +200,9 @@ clar_run_suite(const struct clar_suite *suite)
 	if (!clar_category_is_suite_enabled(suite))
 		return;
 
+	if (_clar.exit_on_error && _clar.total_errors)
+		return;
+
 	if (!_clar.report_errors_only)
 		clar_print_onsuite(suite->name, suite->index);
 	clar_on_suite();
@@ -209,6 +213,9 @@ clar_run_suite(const struct clar_suite *suite)
 	for (i = 0; i < suite->test_count; ++i) {
 		_clar.active_test = test[i].name;
 		clar_run_test(&test[i], &suite->initialize, &suite->cleanup);
+
+		if (_clar.exit_on_error && _clar.total_errors)
+			return;
 	}
 }
 
@@ -231,8 +238,9 @@ clar_usage(const char *arg)
 	printf("Usage: %s [options]\n\n", arg);
 	printf("Options:\n");
 	printf("  -sXX\t\tRun only the suite number or name XX\n");
-	printf("  -q  \t\tOnly report tests that had an error\n");
 	printf("  -i<name>\tInclude category <name> tests\n");
+	printf("  -q  \t\tOnly report tests that had an error\n");
+	printf("  -Q  \t\tQuit as soon as a test fails\n");
 	printf("  -l  \t\tPrint suite names and category names\n");
 	exit(-1);
 }
@@ -296,6 +304,10 @@ clar_parse_args(int argc, char **argv)
 
 		case 'q':
 			_clar.report_errors_only = 1;
+			break;
+
+		case 'Q':
+			_clar.exit_on_error = 1;
 			break;
 
 		case 'i': {
