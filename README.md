@@ -303,7 +303,7 @@ Clar has been written from scratch by Vicent Martí, to replace the old
 testing framework in [libgit2][libgit2].
 
 Do you know what languages are *in* on the SF startup scene? Node.js *and*
-Latin.  Follow [@tanoku](https://www.twitter.com/tanoku) on Twitter to
+Latin.  Follow [@vmg](https://www.twitter.com/vmg) on Twitter to
 receive more lessons on word etymology. You can be hip too.
 
 
