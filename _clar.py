@@ -16,6 +16,8 @@ SKIP_COMMENTS_REGEX = re.compile(
     r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
     re.DOTALL | re.MULTILINE)
 
+CATEGORY_REGEX = re.compile(r"CL_IN_CATEGORY\(\s*\"([^\"]+)\"\s*\)")
+
 CLAR_HEADER = """
 /*
  * Clar v%s
@@ -57,6 +59,7 @@ class ClarTestBuilder:
         self.suite_names = []
         self.callback_data = {}
         self.suite_data = {}
+        self.category_data = {}
         self.event_callbacks = []
 
         self.clar_path = os.path.abspath(clar_path) if clar_path else None
@@ -65,7 +68,8 @@ class ClarTestBuilder:
         self.modules = [
             "clar_sandbox.c",
             "clar_fixtures.c",
-            "clar_fs.c"
+            "clar_fs.c",
+            "clar_categorize.c",
         ]
 
         self.modules.append("clar_print_%s.c" % print_mode)
@@ -115,6 +119,7 @@ r"""
         "${clean_name}",
         ${initialize},
         ${cleanup},
+        ${categories},
         ${cb_ptr}, ${cb_count}
     }
 """)
@@ -124,11 +129,17 @@ r"""
             callbacks[cb] = (self._render_cb(suite[cb])
                 if suite[cb] else "{NULL, NULL}")
 
+        if len(self.category_data[suite['name']]) > 0:
+            cats = "_clar_cat_%s" % suite['name']
+        else:
+            cats = "NULL"
+
         return template.substitute(
             suite_index = index,
             clean_name = suite['name'].replace("_", "::"),
             initialize = callbacks['initialize'],
             cleanup = callbacks['cleanup'],
+            categories = cats,
             cb_ptr = "_clar_cb_%s" % suite['name'],
             cb_count = suite['cb_count']
         ).strip()
@@ -150,6 +161,19 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
             suite_name = suite_name,
             callbacks = ",\n\t".join(callbacks)
         ).strip()
+
+    def _render_categories(self, suite_name, categories):
+        template = Template(
+r"""
+static const char *_clar_cat_${suite_name}[] = { "${categories}", NULL };
+""")
+        if len(categories) > 0:
+            return template.substitute(
+                suite_name = suite_name,
+                categories = '","'.join(categories)
+                ).strip()
+        else:
+            return ""
 
     def _render_event_overrides(self):
         overrides = []
@@ -193,9 +217,15 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
             len(cbs) for cbs in self.callback_data.values()
         )
 
+        categories = [
+            self._render_categories(s, self.category_data[s])
+            for s in suite_names
+        ]
+
         return template.substitute(
             clar_modules = self._get_modules(),
             clar_callbacks = "\n".join(callbacks),
+            clar_categories = "".join(categories),
             clar_suites = ",\n\t".join(suite_data),
             clar_suite_count = len(suite_data),
             clar_callback_count = callback_count,
@@ -236,6 +266,7 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
 
         self._process_events(contents)
         self._process_declarations(suite_name, contents)
+        self._process_categories(suite_name, contents)
 
     def _process_events(self, contents):
         for (decl, event) in EVENT_CB_REGEX.findall(contents):
@@ -296,3 +327,6 @@ static const struct clar_func _clar_cb_${suite_name}[] = {
 
         print("  %s (%d tests)" % (suite_name, tests_in_suite))
 
+    def _process_categories(self, suite_name, contents):
+        self.category_data[suite_name] = [
+            cat for cat in CATEGORY_REGEX.findall(contents) ]
