@@ -130,27 +130,19 @@ errors during test execution.
 #### Categorizing Tests
 
 As your test suite grows, you may wish to create categories of tests that
-can be run selectively.  To do this, you add a `categorize` method parallel
-to the `initialize` and `cleanup` methods, which calls the
-`cl_in_category(<name>)` function to add the tests in the current file to a
-particular category.
+can be run selectively.  To do this, you just put one or more `CL_IN_CATEGORY`
+declarations into your test file, like so:
 
 ~~~~ c
-void test_status__categorize(void)
-{
-	cl_in_category("status");
-	cl_in_category("quick");
-}
+CL_IN_CATEGORY("status")
+CL_IN_CATEGORY("quick")
 ~~~~
 
-Then when you go to run the test executable, you can pass the argument
-`-i=<category>` to enable tests of the given category.  Tests that are not
-categorized are put in a category named "default" which is run automatically
-if you do not specify categories on the command line.
-
-You can include multiple categories by using the `-i` argument multiple
-times.  Also, if you include categories, the "default" category will be
-disabled unless you explicitly add `-i=default` to reenable it.
+When you go to run the test executable, you can pass use `-i=<category>`
+to enable tests in a category.  Uncategorized tests are put in category
+"default" which is enabled if you don't give any other category to run.
+You can run multiple categories by using the `-i` argument more than once.
+Also, you can use the special "all" category to run everything.
 
 ## The Clar Mixer
 
