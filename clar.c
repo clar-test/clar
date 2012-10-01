@@ -23,6 +23,7 @@
 #	define chdir(path) _chdir(path)
 #	define access(path, mode) _access(path, mode)
 #	define strdup(str) _strdup(str)
+#	define strcasecmp(a,b) _stricmp(a,b)
 
 #	ifndef __MINGW32__
 #		pragma comment(lib, "shell32")

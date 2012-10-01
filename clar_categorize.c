@@ -24,7 +24,8 @@ static void clar_category_add_to_list(clar_category_list *list, const char *cat)
 
 	if (list->count >= list->alloc) {
 		list->alloc += 10;
-		list->names = realloc(list->names, list->alloc * sizeof(const char *));
+		list->names = (const char **)realloc(
+			(void *)list->names, list->alloc * sizeof(const char *));
 	}
 
 	list->names[list->count++] = cat;
@@ -56,7 +57,8 @@ static void clar_category_print_enabled(const char *prefix)
 {
 	int i;
 
-	qsort(_clar_categorize_enabled.names, _clar_categorize_enabled.count,
+	qsort((void *)_clar_categorize_enabled.names,
+		_clar_categorize_enabled.count,
 		sizeof(const char *), clar_category_cmp);
 
 	for (i = 0; i < _clar_categorize_enabled.count; ++i)
