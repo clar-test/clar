@@ -48,7 +48,7 @@ static void clar_category_enable_all(size_t suite_count, const struct clar_suite
 			clar_category_enable(*cat);
 }
 
-static int clar_category_cmp(const void *a, const void *b)
+static int _MAIN_CC clar_category_cmp(const void *a, const void *b)
 {
 	return - strcasecmp(a,b);
 }
