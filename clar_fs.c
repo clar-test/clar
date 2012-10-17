@@ -1,5 +1,8 @@
 #ifdef _WIN32
 
+#define RM_RETRY_COUNT	5
+#define RM_RETRY_DELAY	10
+
 #ifdef __MINGW32__
 
 /* These security-enhanced functions are not available
@@ -15,6 +18,26 @@ fs__dotordotdot(WCHAR *_tocheck)
 	return _tocheck[0] == '.' &&
 		(_tocheck[1] == '\0' ||
 		 (_tocheck[1] == '.' && _tocheck[2] == '\0'));
+}
+
+static int
+fs_rmdir_rmdir(WCHAR *_wpath)
+{
+	unsigned retries = 1;
+
+	while (!RemoveDirectoryW(_wpath)) {
+		/* Only retry when we have retries remaining, and the
+		 * error was ERROR_DIR_NOT_EMPTY. */
+		if (retries++ > RM_RETRY_COUNT ||
+			ERROR_DIR_NOT_EMPTY != GetLastError())
+			return -1;
+
+		/* Give whatever has a handle to a child item some time
+		 * to release it before trying again */
+		Sleep(RM_RETRY_DELAY * retries * retries);
+	}
+
+	return 0;
 }
 
 static void
@@ -62,7 +85,31 @@ fs_rmdir_helper(WCHAR *_wsource)
 	FindClose(find_handle);
 
 	/* Now that the directory is empty, remove it */
-	cl_assert(RemoveDirectoryW(_wsource));
+	cl_assert(0 == fs_rmdir_rmdir(_wsource));
+}
+
+static int
+fs_rm_wait(WCHAR *_wpath)
+{
+	unsigned retries = 1;
+	DWORD last_error;
+
+	do {
+		if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW(_wpath))
+			last_error = GetLastError();
+		else
+			last_error = ERROR_SUCCESS;
+
+		/* Is the item gone? */
+		if (ERROR_FILE_NOT_FOUND == last_error ||
+			ERROR_PATH_NOT_FOUND == last_error)
+			return 0;
+
+		Sleep(RM_RETRY_DELAY * retries * retries);	
+	}
+	while (retries++ <= RM_RETRY_COUNT);
+
+	return -1;
 }
 
 static void
@@ -95,6 +142,9 @@ fs_rm(const char *_source)
 
 		cl_assert(DeleteFileW(wsource));
 	}
+
+	/* Wait for the DeleteFile or RemoveDirectory call to complete */
+	cl_assert(0 == fs_rm_wait(wsource));
 }
 
 static void
