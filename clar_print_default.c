@@ -34,6 +34,7 @@ static void clar_print_error(int num, const struct clar_error *error)
 		printf("  %s\n", error->description);
 
 	printf("\n");
+	fflush(stdout);
 }
 
 static void clar_print_ontest(const char *test_name, int test_number, int failed)
