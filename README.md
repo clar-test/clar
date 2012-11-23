@@ -127,6 +127,11 @@ value. A test is considered "passed" if it doesn't raise any errors. Check
 the "Clar API" section to see the various helper functions to check and raise
 errors during test execution.
 
+__Caution:__ If you use assertions inside of `test_suitename__initialize`, make
+sure that you do not rely on `__initialize` being completely run inside your
+`test_suitename__cleanup` function. Otherwise you might encounter ressource
+cleanup twice.
+
 #### Categorizing Tests
 
 As your test suite grows, you may wish to create categories of tests that
