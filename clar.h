@@ -67,9 +67,4 @@ void cl_fixture_cleanup(const char *fixture_name);
 #define cl_assert_equal_b(b1,b2) clar__assert_equal_i(!!(b1),!!(b2),__FILE__,__LINE__,#b1 " != " #b2, 1)
 #define cl_assert_equal_p(p1,p2) cl_assert((p1) == (p2))
 
-/**
- * Test method declarations
- */
-${extern_declarations}
-
 #endif
