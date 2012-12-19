@@ -20,13 +20,11 @@ static void clar_print_error(int num, const struct clar_error *error)
 {
 	printf("  %d) Failure:\n", num);
 
-	printf("%s::%s (%s) [%s:%d] [-t%d]\n",
+	printf("%s::%s [%s:%d]\n",
 		error->suite,
 		error->test,
-		"no description",
 		error->file,
-		error->line_number,
-		error->test_number);
+		error->line_number);
 
 	printf("  %s\n", error->error_msg);
 
@@ -42,6 +40,7 @@ static void clar_print_ontest(const char *test_name, int test_number, int failed
 	(void)test_name;
 	(void)test_number;
 	printf("%c", failed ? 'F' : '.');
+	fflush(stdout);
 }
 
 static void clar_print_onsuite(const char *suite_name, int suite_index)

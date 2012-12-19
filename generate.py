@@ -16,41 +16,47 @@ class Module(object):
 
     class DeclarationTemplate(Template):
         def render(self):
-            return "\n".join("extern %s;" % cb['declaration'] for cb in self.module.callbacks)
+            out = "\n".join("extern %s;" % cb['declaration'] for cb in self.module.callbacks)
+
+            if self.module.initialize:
+                out += "extern %s;\n" % self.module.initialize['declaration']
+
+            if self.module.cleanup:
+                out += "extern %s;\n" % self.module.cleanup['declaration']
+
+            return out
 
     class CallbacksTemplate(Template):
         def render(self):
-            out = "static const struct clar_func _clar_cb_%s[] = {" % self.module.name
-            out += ",".join(self._render_callback(cb) for cb in self.module.callbacks)
-            out += "};"
+            out = "static const struct clar_func _clar_cb_%s[] = {\n" % self.module.name
+            out += ",\n".join(self._render_callback(cb) for cb in self.module.callbacks)
+            out += "\n};\n"
             return out
 
     class InfoTemplate(Template):
-        def render(self, index):
+        def render(self):
             return Template(
             r"""{
-                    ${suite_index},
                     "${clean_name}",
                     ${initialize},
                     ${cleanup},
-                    ${categories},
-                    ${cb_ptr}, ${cb_count}
+                    ${cb_ptr}, ${cb_count}, ${enabled}
                 }"""
             ).substitute(
-                suite_index = index,
                 clean_name = self.module.clean_name(),
                 initialize = self._render_callback(self.module.initialize),
                 cleanup = self._render_callback(self.module.cleanup),
-                categories = "NULL", # TODO
-                cb_ptr = "&_clar_cb_%s" % self.module.name,
-                cb_count = len(self.module.callbacks)
+                cb_ptr = "_clar_cb_%s" % self.module.name,
+                cb_count = len(self.module.callbacks),
+                enabled = int(self.module.enabled)
             )
 
     def __init__(self, name):
-        self.mtime = None
-        self.size = None
         self.name = name
-        self.index = 0
+
+        self.mtime = 0
+        self.enabled = True
+        self.modified = False
 
     def clean_name(self):
         return self.name.replace("_", "::")
@@ -90,18 +96,20 @@ class Module(object):
             else:
                 self.callbacks.append(data)
 
-        print "Loaded %d callbacks" % len(self.callbacks)
         return self.callbacks != []
 
     def refresh(self, path):
+        self.modified = False
+
         try:
             st = os.stat(path)
-            if st.st_mtime == self.mtime and st.st_size == self.size:
-                print "File %s has not changed" % path
+
+            # Not modified
+            if st.st_mtime == self.mtime:
                 return True
 
+            self.modified = True
             self.mtime = st.st_mtime
-            self.size = st.st_size
 
             with open(path) as fp:
                 raw_content = fp.read()
@@ -109,14 +117,17 @@ class Module(object):
         except IOError:
             return False
 
-        print "Refreshing file %s (%d bytes)" % (path, len(raw_content))
         return self.parse(raw_content)
 
 class TestSuite(object):
-    def find_modules(self, path):
+
+    def __init__(self, path):
+        self.path = path
+
+    def find_modules(self):
         modules = []
-        for root, _, files in os.walk(path):
-            module_root = root[len(path):]
+        for root, _, files in os.walk(self.path):
+            module_root = root[len(self.path):]
             module_root = [c for c in module_root.split(os.sep) if c]
 
             tests_in_module = fnmatch.filter(files, "*.c")
@@ -129,12 +140,9 @@ class TestSuite(object):
 
         return modules
 
-    def load_cache(self, path):
-        path = os.path.join(path, '.clarcache')
+    def load_cache(self):
+        path = os.path.join(self.path, '.clarcache')
         cache = {}
-
-        # TODO: remove
-        return {}
 
         try:
             fp = open(path)
@@ -145,14 +153,14 @@ class TestSuite(object):
 
         return cache
 
-    def save_cache(self, path):
-        path = os.path.join(path, '.clarcache')
+    def save_cache(self):
+        path = os.path.join(self.path, '.clarcache')
         with open(path, 'w') as cache:
             pickle.dump(self.modules, cache)
 
-    def load(self, path):
-        module_data = self.find_modules(path)
-        self.modules = self.load_cache(path)
+    def load(self, force = False):
+        module_data = self.find_modules()
+        self.modules = {} if force else self.load_cache()
 
         for path, name in module_data:
             if name not in self.modules:
@@ -161,8 +169,17 @@ class TestSuite(object):
             if not self.modules[name].refresh(path):
                 del self.modules[name]
 
-    def render(self, path):
-        path = os.path.join(path, 'clar.suite')
+    def suite_count(self):
+        return len(self.modules)
+
+    def callback_count(self):
+        return sum(len(module.callbacks) for module in self.modules.values())
+
+    def write(self):
+        if not any(module.modified for module in self.modules.values()):
+            return False
+
+        path = os.path.join(self.path, 'clar.suite')
         with open(path, 'w') as data:
             for module in self.modules.values():
                 t = Module.DeclarationTemplate(module)
@@ -172,19 +189,29 @@ class TestSuite(object):
                 t = Module.CallbacksTemplate(module)
                 data.write(t.render())
 
-            suites = "static const struct clar_suite _clar_suites[] = {" + ','.join(
-                Module.InfoTemplate(module).render(i)
-                for i, module in enumerate(self.modules.values())
+            suites = "static struct clar_suite _clar_suites[] = {" + ','.join(
+                Module.InfoTemplate(module).render() for module in self.modules.values()
             ) + "};"
 
             data.write(suites)
 
-            data.write("static size_t _clar_suite_count = %d;" % self.suite_count())
-            data.write("static size_t _clar_callback_count = %d;" % self.callback_count())
+            data.write("static const size_t _clar_suite_count = %d;" % self.suite_count())
+            data.write("static const size_t _clar_callback_count = %d;" % self.callback_count())
 
-suite = TestSuite()
+        suite.save_cache()
+        return True
 
-suite.load('.')
-print "Loaded %d suites" % len(suite.modules)
-suite.render('.')
-suite.save_cache('.')
+if __name__ == '__main__':
+    from optparse import OptionParser
+
+    parser = OptionParser()
+    parser.add_option('-f', '--force', dest='force', default=False)
+
+    options, args = parser.parse_args()
+
+    for path in args or ['.']:
+        suite = TestSuite(path)
+        suite.load(options.force)
+        if suite.write():
+            print "Written `clar.suite` (%d suites)" % len(suite.modules)
+

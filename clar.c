@@ -70,7 +70,8 @@ static struct {
 	int suite_errors;
 	int total_errors;
 
-	int test_count;
+	int tests_ran;
+	int suites_ran;
 
 	int report_errors_only;
 	int exit_on_error;
@@ -91,13 +92,12 @@ struct clar_func {
 };
 
 struct clar_suite {
-	int index;
 	const char *name;
 	struct clar_func initialize;
 	struct clar_func cleanup;
-	const char **categories;
 	const struct clar_func *tests;
 	size_t test_count;
+	int enabled;
 };
 
 /* From clar_print_*.c */
@@ -111,12 +111,6 @@ static void clar_print_onabort(const char *msg, ...);
 /* From clar_sandbox.c */
 static void clar_unsandbox(void);
 static int clar_sandbox(void);
-
-/* From clar_categorize.c */
-static int clar_category_is_suite_enabled(const struct clar_suite *);
-static void clar_category_enable(const char *category);
-static void clar_category_enable_all(size_t, const struct clar_suite *);
-static void clar_category_print_enabled(const char *prefix);
 
 /* Load the declarations for the test suite */
 #include "../clar.suite"
@@ -148,7 +142,6 @@ clar_run_test(
 {
 	int error_st = _clar.suite_errors;
 
-	clar_on_test();
 	_clar.trampoline_enabled = 1;
 
 	if (setjmp(_clar.trampoline) == 0) {
@@ -166,7 +159,7 @@ clar_run_test(
 	if (cleanup->ptr != NULL)
 		cleanup->ptr();
 
-	_clar.test_count++;
+	_clar.tests_ran++;
 
 	/* remove any local-set cleanup methods */
 	_clar.local_cleanup = NULL;
@@ -177,7 +170,7 @@ clar_run_test(
 	else
 		clar_print_ontest(
 			test->name,
-			_clar.test_count,
+			_clar.tests_ran,
 			(_clar.suite_errors > error_st)
 		);
 }
@@ -188,15 +181,14 @@ clar_run_suite(const struct clar_suite *suite)
 	const struct clar_func *test = suite->tests;
 	size_t i;
 
-	if (!clar_category_is_suite_enabled(suite))
+	if (!suite->enabled)
 		return;
 
 	if (_clar.exit_on_error && _clar.total_errors)
 		return;
 
 	if (!_clar.report_errors_only)
-		clar_print_onsuite(suite->name, suite->index);
-	clar_on_suite();
+		clar_print_onsuite(suite->name, ++_clar.suites_ran);
 
 	_clar.active_suite = suite->name;
 	_clar.suite_errors = 0;
@@ -210,29 +202,17 @@ clar_run_suite(const struct clar_suite *suite)
 	}
 }
 
-#if 0 /* temporarily disabled */
-static void
-clar_run_single(const struct clar_func *test,
-	const struct clar_suite *suite)
-{
-	_clar.suite_errors = 0;
-	_clar.active_suite = suite->name;
-	_clar.active_test = test->name;
-
-	clar_run_test(test, &suite->initialize, &suite->cleanup);
-}
-#endif
-
 static void
 clar_usage(const char *arg)
 {
 	printf("Usage: %s [options]\n\n", arg);
 	printf("Options:\n");
-	printf("  -sXX\t\tRun only the suite number or name XX\n");
-	printf("  -i<name>\tInclude category <name> tests\n");
+	printf("  -sname\t\tRun only the suite with `name`\n");
+	printf("  -iname\t\tInclude the suite with `name`\n");
+	printf("  -xname\t\tExclude the suite with `name`\n");
 	printf("  -q  \t\tOnly report tests that had an error\n");
 	printf("  -Q  \t\tQuit as soon as a test fails\n");
-	printf("  -l  \t\tPrint suite names and category names\n");
+	printf("  -l  \t\tPrint suite names\n");
 	exit(-1);
 }
 
@@ -248,45 +228,30 @@ clar_parse_args(int argc, char **argv)
 			clar_usage(argv[0]);
 
 		switch (argument[1]) {
-		case 's': { /* given suite number, name, or prefix */
-			int num = 0, offset = (argument[2] == '=') ? 3 : 2;
-			int len = 0, is_num = 1, has_colon = 0, j;
+		case 's':
+		case 'i':
+		case 'x': { /* given suite name */
+			int offset = (argument[2] == '=') ? 3 : 2;
+			char action = argument[1];
+			size_t j;
 
-			for (argument += offset; *argument; ++argument) {
-				len++;
-				if (*argument >= '0' && *argument <= '9')
-					num = (num * 10) + (*argument - '0');
-				else {
-					is_num = 0;
-					if (*argument == ':')
-						has_colon = 1;
-				}
-			}
+			argument += offset;
 
-			argument = argv[i] + offset;
-
-			if (!len)
+			if (*argument == '\0')
 				clar_usage(argv[0]);
-			else if (is_num) {
-				if ((size_t)num >= _clar_suite_count) {
-					clar_print_onabort("Suite number %d does not exist.\n", num);
-					exit(-1);
-				}
-				clar_run_suite(&_clar_suites[num]);
-			}
-			else if (!has_colon || argument[-1] == ':') {
-				for (j = 0; j < (int)_clar_suite_count; ++j)
-					if (strncmp(argument, _clar_suites[j].name, len) == 0)
-						clar_run_suite(&_clar_suites[j]);
-			}
-			else {
-				for (j = 0; j < (int)_clar_suite_count; ++j)
-					if (strcmp(argument, _clar_suites[j].name) == 0) {
-						clar_run_suite(&_clar_suites[j]);
-						break;
+
+			for (j = 0; j < _clar_suite_count; ++j) {
+				if (strcmp(argument, _clar_suites[j].name) == 0) {
+					switch (action) {
+						case 's': clar_run_suite(&_clar_suites[j]); break;
+						case 'i': _clar_suites[j].enabled = 1; break;
+						case 'x': _clar_suites[j].enabled = 0; break;
 					}
+					break;
+				}
 			}
-			if (_clar.active_suite == NULL) {
+
+			if (j == _clar_suite_count) {
 				clar_print_onabort("No suite matching '%s' found.\n", argument);
 				exit(-1);
 			}
@@ -301,24 +266,11 @@ clar_parse_args(int argc, char **argv)
 			_clar.exit_on_error = 1;
 			break;
 
-		case 'i': {
-			int offset = (argument[2] == '=') ? 3 : 2;
-			if (strcasecmp("all", argument + offset) == 0)
-				clar_category_enable_all(_clar_suite_count, _clar_suites);
-			else
-				clar_category_enable(argument + offset);
-			break;
-		}
-
 		case 'l': {
 			size_t j;
 			printf("Test suites (use -s<name> to run just one):\n");
 			for (j = 0; j < _clar_suite_count; ++j)
 				printf(" %3d: %s\n", (int)j, _clar_suites[j].name);
-
-			printf("\nCategories (use -i<category> to include):\n");
-			clar_category_enable_all(_clar_suite_count, _clar_suites);
-			clar_category_print_enabled(" - ");
 
 			exit(0);
 		}
@@ -329,7 +281,7 @@ clar_parse_args(int argc, char **argv)
 	}
 }
 
-static int
+int
 clar_test(int argc, char **argv)
 {
 	clar_print_init(
@@ -343,24 +295,20 @@ clar_test(int argc, char **argv)
 		exit(-1);
 	}
 
-	clar_on_init();
-
 	if (argc > 1)
 		clar_parse_args(argc, argv);
 
-	if (_clar.active_suite == NULL) {
+	if (!_clar.suites_ran) {
 		size_t i;
 		for (i = 0; i < _clar_suite_count; ++i)
 			clar_run_suite(&_clar_suites[i]);
 	}
 
 	clar_print_shutdown(
-		_clar.test_count,
+		_clar.tests_ran,
 		(int)_clar_suite_count,
 		_clar.total_errors
 	);
-
-	clar_on_shutdown();
 
 	clar_unsandbox();
 	return _clar.total_errors;
@@ -391,7 +339,7 @@ clar__assert(
 	_clar.last_error = error;
 
 	error->test = _clar.active_test;
-	error->test_number = _clar.test_count;
+	error->test_number = _clar.tests_ran;
 	error->suite = _clar.active_suite;
 	error->file = file;
 	error->line_number = line;
@@ -453,7 +401,7 @@ void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 	_clar.local_cleanup_payload = opaque;
 }
 
-int _MAIN_CC main(int argc, char *argv[])
-{
-    return clar_test(argc, argv);
-}
+#include "src/sandbox.h"
+#include "src/fixtures.h"
+#include "src/fs.h"
+#include "src/print.h"
