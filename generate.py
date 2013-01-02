@@ -124,6 +124,15 @@ class TestSuite(object):
     def __init__(self, path):
         self.path = path
 
+    def should_generate(self, path):
+        if not os.path.isfile(path):
+            return True
+
+        if any(module.modified for module in self.modules.values()):
+            return True
+
+        return False
+
     def find_modules(self):
         modules = []
         for root, _, files in os.walk(self.path):
@@ -176,11 +185,12 @@ class TestSuite(object):
         return sum(len(module.callbacks) for module in self.modules.values())
 
     def write(self):
-        if not any(module.modified for module in self.modules.values()):
+        output = os.path.join(self.path, 'clar.suite')
+
+        if not self.should_generate(output):
             return False
 
-        path = os.path.join(self.path, 'clar.suite')
-        with open(path, 'w') as data:
+        with open(output, 'w') as data:
             for module in self.modules.values():
                 t = Module.DeclarationTemplate(module)
                 data.write(t.render())
