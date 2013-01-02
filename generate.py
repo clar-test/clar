@@ -178,6 +178,15 @@ class TestSuite(object):
             if not self.modules[name].refresh(path):
                 del self.modules[name]
 
+    def disable(self, excluded):
+        for exclude in excluded:
+            for module in self.modules.values():
+                name = module.clean_name()
+                if name.startswith(exclude):
+                    module.enabled = False
+                    module.modified = True
+                    break
+
     def suite_count(self):
         return len(self.modules)
 
@@ -216,12 +225,14 @@ if __name__ == '__main__':
 
     parser = OptionParser()
     parser.add_option('-f', '--force', dest='force', default=False)
+    parser.add_option('-x', '--exclude', dest='excluded', action='append', default=[])
 
     options, args = parser.parse_args()
 
     for path in args or ['.']:
         suite = TestSuite(path)
         suite.load(options.force)
+        suite.disable(options.excluded)
         if suite.write():
             print "Written `clar.suite` (%d suites)" % len(suite.modules)
 
