@@ -113,7 +113,7 @@ static void clar_unsandbox(void);
 static int clar_sandbox(void);
 
 /* Load the declarations for the test suite */
-#include "../clar.suite"
+#include "clar.suite"
 
 /* Core test functions */
 static void
@@ -402,7 +402,7 @@ void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 	_clar.local_cleanup_payload = opaque;
 }
 
-#include "src/sandbox.h"
-#include "src/fixtures.h"
-#include "src/fs.h"
-#include "src/print.h"
+#include "clar/sandbox.h"
+#include "clar/fixtures.h"
+#include "clar/fs.h"
+#include "clar/print.h"
