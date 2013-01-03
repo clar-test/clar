@@ -185,7 +185,6 @@ class TestSuite(object):
                 if name.startswith(exclude):
                     module.enabled = False
                     module.modified = True
-                    break
 
     def suite_count(self):
         return len(self.modules)
