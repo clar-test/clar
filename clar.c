@@ -233,15 +233,16 @@ clar_parse_args(int argc, char **argv)
 		case 'x': { /* given suite name */
 			int offset = (argument[2] == '=') ? 3 : 2;
 			char action = argument[1];
-			size_t j;
+			size_t j, len;
 
 			argument += offset;
+			len = strlen(argument);
 
-			if (*argument == '\0')
+			if (len == 0)
 				clar_usage(argv[0]);
 
 			for (j = 0; j < _clar_suite_count; ++j) {
-				if (strcmp(argument, _clar_suites[j].name) == 0) {
+				if (strncmp(argument, _clar_suites[j].name, len) == 0) {
 					switch (action) {
 						case 's': clar_run_suite(&_clar_suites[j]); break;
 						case 'i': _clar_suites[j].enabled = 1; break;
