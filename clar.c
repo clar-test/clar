@@ -237,7 +237,7 @@ clar_parse_args(int argc, char **argv)
 		case 's':
 		case 'i':
 		case 'x': { /* given suite name */
-			int offset = (argument[2] == '=') ? 3 : 2;
+			int offset = (argument[2] == '=') ? 3 : 2, found = 0;
 			char action = argument[1];
 			size_t j, len;
 
@@ -249,16 +249,22 @@ clar_parse_args(int argc, char **argv)
 
 			for (j = 0; j < _clar_suite_count; ++j) {
 				if (strncmp(argument, _clar_suites[j].name, len) == 0) {
+					int exact = !strcmp(argument, _clar_suites[j].name);
+
+					++found;
+
 					switch (action) {
 						case 's': clar_run_suite(&_clar_suites[j]); break;
 						case 'i': _clar_suites[j].enabled = 1; break;
 						case 'x': _clar_suites[j].enabled = 0; break;
 					}
-					break;
+
+					if (exact)
+						break;
 				}
 			}
 
-			if (j == _clar_suite_count) {
+			if (!found) {
 				clar_print_onabort("No suite matching '%s' found.\n", argument);
 				exit(-1);
 			}
