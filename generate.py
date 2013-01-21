@@ -17,12 +17,12 @@ class Module(object):
 
         def _render_callback(self, cb):
             if not cb:
-                return '{ NULL, NULL }'
-            return '{ "%s", &%s }' % (cb['short_name'], cb['symbol'])
+                return '    { NULL, NULL }'
+            return '    { "%s", &%s }' % (cb['short_name'], cb['symbol'])
 
     class DeclarationTemplate(Template):
         def render(self):
-            out = "\n".join("extern %s;" % cb['declaration'] for cb in self.module.callbacks)
+            out = "\n".join("extern %s;" % cb['declaration'] for cb in self.module.callbacks) + "\n"
 
             if self.module.initialize:
                 out += "extern %s;\n" % self.module.initialize['declaration']
@@ -42,12 +42,13 @@ class Module(object):
     class InfoTemplate(Template):
         def render(self):
             return Template(
-            r"""{
-                    "${clean_name}",
-                    ${initialize},
-                    ${cleanup},
-                    ${cb_ptr}, ${cb_count}, ${enabled}
-                }"""
+            r"""
+    {
+        "${clean_name}",
+    ${initialize},
+    ${cleanup},
+        ${cb_ptr}, ${cb_count}, ${enabled}
+    }"""
             ).substitute(
                 clean_name = self.module.clean_name(),
                 initialize = self._render_callback(self.module.initialize),
@@ -214,13 +215,13 @@ class TestSuite(object):
                 data.write(t.render())
 
             suites = "static struct clar_suite _clar_suites[] = {" + ','.join(
-                Module.InfoTemplate(module).render() for module in self.modules.values()
-            ) + "};"
+                Module.InfoTemplate(module).render() for module in sorted(self.modules.values(), key=lambda module: module.name)
+            ) + "\n};\n"
 
             data.write(suites)
 
-            data.write("static const size_t _clar_suite_count = %d;" % self.suite_count())
-            data.write("static const size_t _clar_callback_count = %d;" % self.callback_count())
+            data.write("static const size_t _clar_suite_count = %d;\n" % self.suite_count())
+            data.write("static const size_t _clar_callback_count = %d;\n" % self.callback_count())
 
         suite.save_cache()
         return True
