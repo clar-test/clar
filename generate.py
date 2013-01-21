@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+#
+# Copyright (c) Vicent Marti. All rights reserved.
+#
+# This file is part of clar, distributed under the ISC license.
+# For full terms see the included COPYING file.
+#
 
 from __future__ import with_statement
 from string import Template
