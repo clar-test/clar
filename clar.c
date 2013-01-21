@@ -81,6 +81,7 @@ static struct {
 
 	int report_errors_only;
 	int exit_on_error;
+	int report_suite_names;
 
 	struct clar_error *errors;
 	struct clar_error *last_error;
@@ -252,6 +253,9 @@ clar_parse_args(int argc, char **argv)
 					int exact = !strcmp(argument, _clar_suites[j].name);
 
 					++found;
+
+					if (!exact)
+						_clar.report_suite_names = 1;
 
 					switch (action) {
 						case 's': clar_run_suite(&_clar_suites[j]); break;
