@@ -214,12 +214,12 @@ clar_usage(const char *arg)
 {
 	printf("Usage: %s [options]\n\n", arg);
 	printf("Options:\n");
-	printf("  -sname\t\tRun only the suite with `name`\n");
-	printf("  -iname\t\tInclude the suite with `name`\n");
-	printf("  -xname\t\tExclude the suite with `name`\n");
-	printf("  -q  \t\tOnly report tests that had an error\n");
-	printf("  -Q  \t\tQuit as soon as a test fails\n");
-	printf("  -l  \t\tPrint suite names\n");
+	printf("  -sname\tRun only the suite with `name`\n");
+	printf("  -iname\tInclude the suite with `name`\n");
+	printf("  -xname\tExclude the suite with `name`\n");
+	printf("  -q    \tOnly report tests that had an error\n");
+	printf("  -Q    \tQuit as soon as a test fails\n");
+	printf("  -l    \tPrint suite names\n");
 	exit(-1);
 }
 
