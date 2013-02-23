@@ -61,9 +61,7 @@ static void clar_unsandbox(void)
 	if (_clar_path[0] == '\0')
 		return;
 
-#ifdef _WIN32
 	chdir("..");
-#endif
 
 	fs_rm(_clar_path);
 }
