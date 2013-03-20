@@ -18,12 +18,17 @@ CLAR_FIXTURE_PATH := $(TEST_DIRECTORY)/resources/
 
 CFLAGS=-g -I.. -I. -Wall -DCLAR_FIXTURE_PATH=\"$(CLAR_FIXTURE_PATH)\"
 
+.PHONY: clean
+
 # list the objects that go into our test
 objects = main.o sample.o
 
 # build the test executable itself
-clar_test: $(objects) clar_test.h clar.suite
+clar_test: $(objects) clar_test.h clar.suite $(CLAR_PATH)clar.c
 	$(CC) $(CFLAGS) -o $@ "$(CLAR_PATH)clar.c" $(objects)
+
+# test object files depend on clar macros
+$(objects) : $(CLAR_PATH)clar.h
 
 # build the clar.suite file of test metadata
 clar.suite:
