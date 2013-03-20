@@ -240,5 +240,5 @@ if __name__ == '__main__':
         suite.load(options.force)
         suite.disable(options.excluded)
         if suite.write():
-            print("Written `clar.suite` (%d suites)" % len(suite.modules))
+            print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))
 

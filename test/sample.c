@@ -43,7 +43,11 @@ void test_sample__3(void)
 	int value = 100;
 
 	cl_assert_equal_s("expected", actual);
+	cl_assert_equal_s_("expected", actual, "second try with annotation");
+
 	cl_assert_equal_i(100, value);
+	cl_assert_equal_i_(101, value, "extra message");
+
 	cl_assert_equal_b(1, value);       /* equal as booleans */
 	cl_assert_equal_p(actual, actual); /* pointers to same object */
 }
