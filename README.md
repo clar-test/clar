@@ -4,16 +4,16 @@ Come out and Clar
 In Catalan, "clar" means clear, easy to perceive.  Using clar will make it
 easy to test and make clear the quality of your code.
 
-(_Historical note_:
+> _Historical note_
+>
+> Originally the clar project was named "clay" because the word "test" has its
+> roots in the latin word *"testum"*, meaning "earthen pot", and *"testa"*,
+> meaning "piece of burned clay"?
+>
+> This is because historically, testing implied melting metal in a pot to
+> check its quality.  Clay is what tests are made of.
 
-Originally the clar project was named "clay" because the word "test" has its
-roots in the latin word *"testum"*, meaning "earthen pot", and *"testa"*,
-meaning "piece of burned clay"?
-
-This is because historically, testing implied melting metal in a pot to
-check its quality.  Clay is what tests are made of.)
-
-## Usage Overview
+## Quick Usage Overview
 
 Clar is a minimal C unit testing framework. It's been written to replace the
 old framework in [libgit2][libgit2], but it's both very versatile and
@@ -21,7 +21,17 @@ straightforward to use.
 
 Can you count to funk?
 
+- **Zero: Initialize test directory**
+
+    ~~~~ sh
+    $ mkdir tests
+    $ cp -r $CLAR_ROOT/clar.[ch] $CLAR_ROOT/clar/ tests
+    $ cp $CLAR_ROOT/test/main.c.sample tests/main.c
+    ~~~~
+
 - **One: Write some tests**
+
+    File: tests/adding.c:
 
     ~~~~ c
     /* adding.c for the "Adding" suite */
@@ -49,22 +59,20 @@ Can you count to funk?
     }
     ~~~~~
 
-- **Two: Mix them with Clar**
+- **Two: Build the test executable**
 
-        $ ./clar.py .
-
-        Loading test suites...
-          adding.c: 1 tests
-        Written test suite to "./clar_main.c"
-        Written header to "./clar.h"
-
-- **Three: Build the test executable**
-
-        $ gcc clar_main.c adding.c -o testit
+    ~~~~ sh
+    $ cd tests
+    $ $CLAR_PATH/generate.py .
+    Written `clar.suite` (1 suites)
+    $ gcc -I. clar.c main.c adding.c -o testit
+    ~~~~
 
 - **Funk: Funk it.**
 
-        $ ./testit
+    ~~~~ sh
+    $ ./testit
+    ~~~~
 
 ## The Clar Test Suite
 
@@ -124,60 +132,59 @@ be static. Clar will automatically detect and list them.
 
 Tests are run as they appear on their original suites: they have no return
 value. A test is considered "passed" if it doesn't raise any errors. Check
-the "Clar API" section to see the various helper functions to check and raise
-errors during test execution.
+the "Clar API" section to see the various helper functions to check and
+raise errors during test execution.
 
-__Caution:__ If you use assertions inside of `test_suitename__initialize`, make
-sure that you do not rely on `__initialize` being completely run inside your
-`test_suitename__cleanup` function. Otherwise you might encounter ressource
-cleanup twice.
+__Caution:__ If you use assertions inside of `test_suitename__initialize`,
+make sure that you do not rely on `__initialize` being completely run
+inside your `test_suitename__cleanup` function. Otherwise you might
+encounter ressource cleanup twice.
 
-#### Categorizing Tests
+## How does Clar work?
 
-As your test suite grows, you may wish to create categories of tests that
-can be run selectively.  To do this, you just put one or more `CL_IN_CATEGORY`
-declarations into your test file, like so:
+To use Clar:
 
-~~~~ c
-CL_IN_CATEGORY("status")
-CL_IN_CATEGORY("quick")
-~~~~
+1. copy the Clar boilerplate to your test directory
+2. copy (and probably modify) the sample `main.c` (from
+   `$CLAR_PATH/test/main.c.sample`)
+3. run the Clar mixer (a.k.a. `generate.py`) to scan your test directory and
+   write out the test suite metadata.
+4. compile your test files and the Clar boilerplate into a single test
+   executable
+5. run the executable to test!
 
-When you go to run the test executable, you can pass use `-i=<category>`
-to enable tests in a category.  Uncategorized tests are put in category
-"default" which is enabled if you don't give any other category to run.
-You can run multiple categories by using the `-i` argument more than once.
-Also, you can use the special "all" category to run everything.
+The Clar boilerplate gives you a set of useful test assertions and features
+(like accessing or making sandbox copies of fixture data).  It consists of
+the `clar.c` and `clar.h` files, plus the code in the `clar/` subdirectory.
+You should not need to edit these files.
 
-## The Clar Mixer
+The sample `main.c` (i.e. `$CLAR_PATH/test/main.c.sample`) file invokes
+`clar_test(argc, argv)` to run the tests.  Usually, you will edit this file
+to perform any framework specific initialization and teardown that you need.
 
-The Clar mixer, also known as `clar.py` is the only file needed to use Clar.
-
-The mixer is a Python script with embedded resources, which automatically
-generates all the files required to build a test suite. No external files
-need to be copied to your test folder.
+The Clar mixer (`generate.py`) recursively scans your test directory for
+any `.c` files, parses them, and writes the `clar.suite` file with all of
+the metadata about your tests.  When you build, the `clar.suite` file is
+included into `clar.c`.
 
 The mixer can be run with **Python 2.5, 2.6, 2.7, 3.0, 3.1, 3.2 and PyPy 1.6**.
 
-Commandline usage is as follows:
+Commandline usage of the mixer is as follows:
 
-    $ ./clar.py .
+    $ ./generate.py .
 
 Where `.` is the folder where all the test suites can be found. The mixer
 will automatically locate all the relevant source files and build the
-testing boilerplate.
+testing metadata. The metadata will be written to `clar.suite`, in the same
+folder as all the test suites. This file is included by `clar.c` and so
+must be accessible via `#include` when building the test executable.
 
-The testing boilerplate will be written to `clar_main.c`, in the same folder
-as all the test suites. This boilerplate has no dependencies whatsoever:
-building together this file with the rest of the suites will generate a
-fully functional test executable.
+    $ gcc -I. clar.c main.c suite1.c test2.c -o run_tests
 
-    $ gcc -I. clar_main.c suite1.c test2.c -o run_tests
-
-**Do note that the Clar mixer only needs to be ran when adding new tests to
-a suite, in order to regenerate the boilerplate**. Consequently, the
-`clar_main.c` boilerplate can be checked in version control to allow
-building the test suite without any prior processing.
+**Note that the Clar mixer only needs to be ran when adding new tests to a
+suite, in order to regenerate the metadata**. As a result, the `clar.suite`
+file can be checked into version control if you wish to be able to build
+your test suite without having to re-run the mixer.
 
 This is handy when e.g. generating tests in a local computer, and then
 building and testing them on an embedded device or a platform where Python
@@ -185,8 +192,8 @@ is not available.
 
 ## The Clar API
 
-Clar makes the following methods available from all functions in a
-test suite.
+Clar makes the following methods available from all functions in a test
+suite.
 
 -   `cl_must_pass(call)`, `cl_must_pass_(call, message)`: Verify that the given
     function call passes, in the POSIX sense (returns a value greater or equal
@@ -223,21 +230,25 @@ test suite.
 
 -   `cl_assert_equal_i(int,int)`: Verify that two integer values are equal.
     The advantage of this over a simple `cl_assert` is that it will format
-	a much nicer error report if the values are not equal.
+    a much nicer error report if the values are not equal.
 
 -   `cl_assert_equal_s(const char *,const char *)`: Verify that two strings
     are equal.  The expected value can also be NULL and this will correctly
     test for that.
 
-Please do note that these methods are *always* available whilst running a test,
-even when calling auxiliary/static functions inside the same file. It's strongly
-encouraged to perform test assertions in auxiliary methods, instead of returning
-error values.
+Please do note that these methods are *always* available whilst running a
+test, even when calling auxiliary/static functions inside the same file.
 
-Example:
+It's strongly encouraged to perform test assertions in auxiliary methods,
+instead of returning error values. This is considered good Clar style.
+
+Style Example:
 
 ~~~~ c
-/* Bad style: auxiliary functions return an error code */
+/*
+ * Bad style: auxiliary functions return an error code
+ */
+
 static int check_string(const char *str)
 {
     const char *aux = process_string(str);
@@ -263,7 +274,10 @@ void test_example__a_test_with_auxiliary_methods(void)
 ~~~~
 
 ~~~~ c
-/* Good style: auxiliary functions perform assertions */
+/*
+ * Good style: auxiliary functions perform assertions
+ */
+
 static void check_string(const char *str)
 {
     const char *aux = process_string(str);
@@ -286,26 +300,11 @@ void test_example__a_test_with_auxiliary_methods(void)
 }
 ~~~~
 
-Global Events
-=============
+About Clar
+==========
 
-If Clar detects any of the following functions declared in any of the
-parsed suite files, they will be treated as global event callbacks and
-issued on the corresponding events.
-
-- `void clar_on_init()`: will be called as soon as Clar is initialized
-- `void clar_on_shutdown()`: will be called beofre Clar shutdowns
-- `void clar_on_test()`: will be called right before each test
-- `void clar_on_suite()`: will be called right before each suite
-
-These are useful when you are testing a library that has a global initializer
-or the likes.
-
-About
-=====
-
-Clar has been written from scratch by Vicent Martí, to replace the old
-testing framework in [libgit2][libgit2].
+Clar has been written from scratch by [Vicent Martí](https://github.com/vmg),
+to replace the old testing framework in [libgit2][libgit2].
 
 Do you know what languages are *in* on the SF startup scene? Node.js *and*
 Latin.  Follow [@vmg](https://www.twitter.com/vmg) on Twitter to
