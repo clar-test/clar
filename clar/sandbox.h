@@ -18,9 +18,9 @@ static int
 find_tmp_path(char *buffer, size_t length)
 {
 #ifndef _WIN32
-	static const size_t var_count = 4;
+	static const size_t var_count = 5;
 	static const char *env_vars[] = {
-		"TMPDIR", "TMP", "TEMP", "USERPROFILE"
+		"CLAR_TMP", "TMPDIR", "TMP", "TEMP", "USERPROFILE"
  	};
 
  	size_t i;
@@ -43,6 +43,12 @@ find_tmp_path(char *buffer, size_t length)
 	}
 
 #else
+	DWORD env_len;
+
+	if ((env_len = GetEnvironmentVariable("CLAR_TMP", buffer, length)) > 0 &&
+		env_len < length)
+		return 0;
+
 	if (GetTempPath((DWORD)length, buffer))
 		return 0;
 #endif
