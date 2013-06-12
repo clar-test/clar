@@ -399,12 +399,15 @@ void clar__assert_equal_s(
 
 	if (!match) {
 		char buf[4096];
-		int pos;
 
-		for (pos = 0; s1[pos] == s2[pos] && s1[pos] && s2[pos]; ++pos)
-			/* find differing byte offset */;
-
-		snprint_eq(buf, sizeof(buf), "'%s' != '%s' (at byte %d)", s1, s2, pos);
+		if (s1 && s2) {
+			int pos;
+			for (pos = 0; s1[pos] == s2[pos] && s1[pos] && s2[pos]; ++pos)
+				/* find differing byte offset */;
+			snprint_eq(buf, sizeof(buf), "'%s' != '%s' (at byte %d)", s1, s2, pos);
+		} else {
+			snprint_eq(buf, sizeof(buf), "'%s' != '%s'", s1, s2);
+		}
 
 		clar__fail(file, line, err, buf, should_abort);
 	}
