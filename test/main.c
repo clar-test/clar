@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	ret = clar_test(argc, argv);
 
 	/* Your custom cleanup here */
-	cl_assert_equal_i(3, global_test_counter);
+	cl_assert_equal_i(7, global_test_counter);
 
 	return ret;
 }
