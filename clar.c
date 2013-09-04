@@ -24,32 +24,59 @@
 
 #	define _MAIN_CC __cdecl
 
-#	define stat(path, st) _stat(path, st)
-#	define mkdir(path, mode) _mkdir(path)
-#	define chdir(path) _chdir(path)
-#	define access(path, mode) _access(path, mode)
-#	define strdup(str) _strdup(str)
-#	define strcasecmp(a,b) _stricmp(a,b)
+#	ifndef stat
+#		define stat(path, st) _stat(path, st)
+#	endif
+#	ifndef mkdir
+#		define mkdir(path, mode) _mkdir(path)
+#	endif
+#	ifndef chdir
+#		define chdir(path) _chdir(path)
+#	endif
+#	ifndef access
+#		define access(path, mode) _access(path, mode)
+#	endif
+#	ifndef strdup
+#		define strdup(str) _strdup(str)
+#	endif
+#	ifndef strcasecmp
+#		define strcasecmp(a,b) _stricmp(a,b)
+#	endif
 
 #	ifndef __MINGW32__
 #		pragma comment(lib, "shell32")
-#		define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
-#		define W_OK 02
-#		define S_ISDIR(x) ((x & _S_IFDIR) != 0)
+#		ifndef strncpy
+#			define strncpy(to, from, to_size) strncpy_s(to, to_size, from, _TRUNCATE)
+#		endif
+#		ifndef W_OK
+#			define W_OK 02
+#		endif
+#		ifndef S_ISDIR
+#			define S_ISDIR(x) ((x & _S_IFDIR) != 0)
+#		endif
 #		define p_snprintf(buf,sz,fmt,...) _snprintf_s(buf,sz,_TRUNCATE,fmt,__VA_ARGS__)
 #	else
 #		define p_snprintf snprintf
 #	endif
-#	define PRIuZ "Iu"
-#	define PRIxZ "Ix"
+
+#	ifndef PRIuZ
+#		define PRIuZ "Iu"
+#	endif
+#	ifndef PRIxZ
+#		define PRIxZ "Ix"
+#	endif
 	typedef struct _stat STAT_T;
 #else
 #	include <sys/wait.h> /* waitpid(2) */
 #	include <unistd.h>
 #	define _MAIN_CC
 #	define p_snprintf snprintf
-#	define PRIuZ "zu"
-#	define PRIxZ "zx"
+#	ifndef PRIuZ
+#		define PRIuZ "zu"
+#	endif
+#	ifndef PRIxZ
+#		define PRIxZ "zx"
+#	endif
 	typedef struct stat STAT_T;
 #endif
 
