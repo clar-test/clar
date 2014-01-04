@@ -25,7 +25,8 @@ Can you count to funk?
 
     ~~~~ sh
     $ mkdir tests
-    $ cp -r $CLAR_ROOT/clar.[ch] $CLAR_ROOT/clar/ tests
+    $ cp -r $CLAR_ROOT/clar* tests
+    $ cp clar/test/clar_test.h tests
     $ cp $CLAR_ROOT/test/main.c.sample tests/main.c
     ~~~~
 
