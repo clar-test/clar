@@ -65,7 +65,12 @@
 #	ifndef PRIxZ
 #		define PRIxZ "Ix"
 #	endif
+
+#	ifdef _MSC_VER
+	typedef struct stat STAT_T;
+#	else
 	typedef struct _stat STAT_T;
+#	endif
 #else
 #	include <sys/wait.h> /* waitpid(2) */
 #	include <unistd.h>
