@@ -47,6 +47,15 @@ void test_sample__strings(void)
 	cl_assert_equal_s_("mismatched", actual, "this one fails");
 }
 
+void test_sample__strings_with_length(void)
+{
+	const char *actual = "expected";
+	cl_assert_equal_strn("expected_", actual, 8);
+	cl_assert_equal_strn("exactly", actual, 2);
+	cl_assert_equal_strn_("expected_", actual, 8, "with annotation");
+	cl_assert_equal_strn_("exactly", actual, 3, "this one fails");
+}
+
 void test_sample__int(void)
 {
 	int value = 100;
