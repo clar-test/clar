@@ -10,8 +10,8 @@
 #include <stdlib.h>
 
 void clar_test_init(int argc, char *argv[]);
-int clar_test_run();
-void clar_test_shutdown();
+int clar_test_run(void);
+void clar_test_shutdown(void);
 
 int clar_test(int argc, char *argv[]);
 
