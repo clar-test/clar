@@ -223,7 +223,7 @@ class TestSuite(object):
             data.write("static const size_t _clar_suite_count = %d;\n" % self.suite_count())
             data.write("static const size_t _clar_callback_count = %d;\n" % self.callback_count())
 
-        suite.save_cache()
+        self.save_cache()
         return True
 
 if __name__ == '__main__':
