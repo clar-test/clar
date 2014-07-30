@@ -150,7 +150,7 @@ class TestSuite(object):
 
             for test_file in tests_in_module:
                 full_path = os.path.join(root, test_file)
-                module_name = "_".join(module_root + [test_file[:-2]])
+                module_name = "_".join(module_root + [test_file[:-2]]).replace("-", "_")
 
                 modules.append((full_path, module_name))
 
