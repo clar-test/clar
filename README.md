@@ -77,7 +77,7 @@ Can you count to funk?
 
 ## The Clar Test Suite
 
-Writing a test suite is pretty straighforward. Each test suite is a `*.c`
+Writing a test suite is pretty straightforward. Each test suite is a `*.c`
 file with a descriptive name: this encourages modularity.
 
 Each test suite has optional initialize and cleanup methods. These methods
