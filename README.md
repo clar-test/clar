@@ -191,6 +191,12 @@ This is handy when e.g. generating tests in a local computer, and then
 building and testing them on an embedded device or a platform where Python
 is not available.
 
+### Fixtures
+
+Clar can create sandboxed fixtures for you to use in your test. You'll need to compile *clar.c* with an additional `CFLAG`, `-DCLAR_FIXTURE_PATH`. This should be an absolute path to your fixtures directory.
+
+Once that's done, you can use the fixture API as defined below.
+
 ## The Clar API
 
 Clar makes the following methods available from all functions in a test
@@ -236,6 +242,14 @@ suite.
 -   `cl_assert_equal_s(const char *,const char *)`: Verify that two strings
     are equal.  The expected value can also be NULL and this will correctly
     test for that.
+
+-   `cl_fixture_sandbox(const char *)`: Sets up a sandbox for a fixture
+    so that you can mutate the file directly.
+
+-   `cl_fixture_cleanup(const char *)`: Tears down the previous fixture
+    sandbox.
+
+-   `cl_fixture(const char *)`: Gets the full path to a fixture file.
 
 Please do note that these methods are *always* available whilst running a
 test, even when calling auxiliary/static functions inside the same file.
