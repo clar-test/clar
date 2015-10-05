@@ -35,6 +35,12 @@ static void clar_print_error(int num, const struct clar_error *error)
 	fflush(stdout);
 }
 
+static void clar_print_timing(const struct clar_timing *timing)
+{
+	printf("Benchmark %s::%s %f\n", timing->suite, timing->test, timing->elapsed);
+	fflush(stdout);
+}
+
 static void clar_print_ontest(const char *test_name, int test_number, enum cl_test_status status)
 {
 	(void)test_name;

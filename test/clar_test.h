@@ -12,5 +12,6 @@
 
 /* Your custom shared includes / defines here */
 extern int global_test_counter;
+extern int global_is_bench;
 
 #endif

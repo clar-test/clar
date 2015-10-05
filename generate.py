@@ -18,7 +18,7 @@ class Module(object):
         def _render_callback(self, cb):
             if not cb:
                 return '    { NULL, NULL }'
-            return '    { "%s", &%s }' % (cb['short_name'], cb['symbol'])
+            return '    { "%s", &%s, %d }' % (cb['short_name'], cb['symbol'], cb['bench'])
 
     class DeclarationTemplate(Template):
         def render(self):
@@ -79,21 +79,13 @@ class Module(object):
 
         return re.sub(SKIP_COMMENTS_REGEX, _replacer, text)
 
-    def parse(self, contents):
-        TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\s*\(\s*void\s*\))\s*\{"
-
-        contents = self._skip_comments(contents)
-        regex = re.compile(TEST_FUNC_REGEX % self.name, re.MULTILINE)
-
-        self.callbacks = []
-        self.initialize = None
-        self.cleanup = None
-
-        for (declaration, symbol, short_name) in regex.findall(contents):
+    def _append_callbacks(self, callbacks, is_bench):
+        for (declaration, symbol, short_name) in callbacks:
             data = {
                 "short_name" : short_name,
                 "declaration" : declaration,
-                "symbol" : symbol
+                "symbol" : symbol,
+                "bench" : is_bench,
             }
 
             if short_name == 'initialize':
@@ -102,6 +94,21 @@ class Module(object):
                 self.cleanup = data
             else:
                 self.callbacks.append(data)
+
+    def parse(self, contents):
+        TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\s*\(\s*void\s*\))\s*\{"
+        BENCH_FUNC_REGEX = r"^(void\s+(bench_%s__(\w+))\s*\(\s*void\s*\))\s*\{"
+
+        contents = self._skip_comments(contents)
+        test_regex = re.compile(TEST_FUNC_REGEX % self.name, re.MULTILINE)
+        bench_regex = re.compile(BENCH_FUNC_REGEX % self.name, re.MULTILINE)
+
+        self.callbacks = []
+        self.initialize = None
+        self.cleanup = None
+
+        self._append_callbacks(test_regex.findall(contents), False)
+        self._append_callbacks(bench_regex.findall(contents), True)
 
         return self.callbacks != []
 

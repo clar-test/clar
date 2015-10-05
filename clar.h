@@ -111,6 +111,11 @@ void cl_fixture_cleanup(const char *fixture_name);
 #define cl_skip() clar__skip()
 
 /**
+ * Timer-related functions
+ */
+#define cl_reset_timer() clar__reset_timer()
+
+/**
  * Typed assertion macros
  */
 #define cl_assert_equal_s(s1,s2) clar__assert_equal(__FILE__,__LINE__,"String mismatch: " #s1 " != " #s2, 1, "%s", (s1), (s2))
@@ -132,6 +137,8 @@ void cl_fixture_cleanup(const char *fixture_name);
 #define cl_assert_equal_b(b1,b2) clar__assert_equal(__FILE__,__LINE__,#b1 " != " #b2, 1, "%d", (int)((b1) != 0),(int)((b2) != 0))
 
 #define cl_assert_equal_p(p1,p2) clar__assert_equal(__FILE__,__LINE__,"Pointer mismatch: " #p1 " != " #p2, 1, "%p", (p1), (p2))
+
+void clar__reset_timer(void);
 
 void clar__skip(void);
 
