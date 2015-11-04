@@ -133,7 +133,7 @@ static struct {
 	int exit_on_error;
 	int report_suite_names;
 
-	int run_benchmarks;
+	int report_benchmarks;
 	double timing_start;
 	double timing_end;
 
@@ -157,7 +157,6 @@ static struct {
 struct clar_func {
 	const char *name;
 	void (*ptr)(void);
-	int is_bench;
 };
 
 struct clar_suite {
@@ -251,6 +250,8 @@ clar_run_test(
 	const struct clar_func *cleanup)
 {
 	_clar.test_status = CL_TEST_OK;
+	_clar.timing_start = 0.0;
+	_clar.timing_end = 0.0;
 	_clar.trampoline_enabled = 1;
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
@@ -327,22 +328,19 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 		if (filter && strncmp(test[i].name, filter, matchlen))
 			continue;
 
-		if (test[i].is_bench != _clar.run_benchmarks)
-			continue;
-
 		_clar.active_test = test[i].name;
 		clar_run_test(&test[i], &suite->initialize, &suite->cleanup);
 
 		if (_clar.exit_on_error && _clar.total_errors)
 			return;
 
-		if (test[i].is_bench) {
-			clar_store_timing();
-		}
+		clar_store_timing();
 	}
 
-	puts("");
-	clar_report_timings();
+	if (_clar.report_benchmarks) {
+		puts("");
+		clar_report_timings();
+	}
 
 	_clar.active_test = NULL;
 	CL_TRACE(CL_TRACE__SUITE_END);
@@ -360,7 +358,7 @@ clar_usage(const char *arg)
 	printf("  -q    \tOnly report tests that had an error\n");
 	printf("  -Q    \tQuit as soon as a test fails\n");
 	printf("  -l    \tPrint suite names\n");
-	printf("  -b    \tRun benchmarks instead of tests\n");
+	printf("  -b    \tReport test benchmarks\n");
 	exit(-1);
 }
 
@@ -420,7 +418,7 @@ clar_parse_args(int argc, char **argv)
 		}
 
 		case 'b':
-			_clar.run_benchmarks = 1;
+			_clar.report_benchmarks = 1;
 			break;
 
 		case 'q':
@@ -509,7 +507,13 @@ clar_test(int argc, char **argv)
 
 static void clar_store_timing(void)
 {
-	struct clar_timing *timing = calloc(1, sizeof(struct clar_timing));
+	struct clar_timing *timing;
+
+	/* Failed tests jump over the timing code */
+	if (_clar.timing_end == 0)
+		return;
+
+	timing = calloc(1, sizeof(struct clar_timing));
 
 	if (_clar.timings == NULL)
 		_clar.timings = timing;

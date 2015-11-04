@@ -83,21 +83,17 @@ void test_sample__ptr(void)
 	cl_assert_equal_p(&actual, actual);
 }
 
-void bench_sample__loop(void)
+void test_sample__bench_loop(void)
 {
 	int i;
-
-	global_is_bench = 1;
 
 	for (i = 0; i < 1000000; i++) {
 	}
 }
 
-void bench_sample__loop2(void)
+void test_sample__bench_loop2(void)
 {
 	int i;
-
-	global_is_bench = 1;
 
 	for (i = 0; i < 1000000; i++) {
 		int dummy = i*1000;
@@ -105,11 +101,9 @@ void bench_sample__loop2(void)
 	}
 }
 
-void bench_sample__reset_timer(void)
+void test_sample__bench_reset_timer(void)
 {
 	int i;
-
-	global_is_bench = 1;
 
 	for (i = 0; i < 100000000; i++) {
 		int dummy = i*1000;

@@ -18,7 +18,6 @@
  */
 
 int global_test_counter = 0;
-int global_is_bench = 0;
 
 #ifdef _WIN32
 int __cdecl main(int argc, char *argv[])
@@ -35,10 +34,7 @@ int main(int argc, char *argv[])
 	ret = clar_test(argc, argv);
 
 	/* Your custom cleanup here */
-	if (global_is_bench)
-		cl_assert_equal_i(3, global_test_counter);
-	else
-		cl_assert_equal_i(8, global_test_counter);
+	cl_assert_equal_i(11, global_test_counter);
 
 	return ret;
 }
