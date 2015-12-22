@@ -240,7 +240,6 @@ clar_report_timings(void)
 		timing = next;
 	}
 
-	_clar.timings = _clar.last_timing = NULL;
 }
 
 static void
@@ -337,11 +336,6 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 		clar_store_timing();
 	}
 
-	if (_clar.report_benchmarks) {
-		puts("");
-		clar_report_timings();
-	}
-
 	_clar.active_test = NULL;
 	CL_TRACE(CL_TRACE__SUITE_END);
 }
@@ -410,6 +404,11 @@ clar_parse_args(int argc, char **argv)
 				}
 			}
 
+			if (_clar.report_benchmarks) {
+				puts("");
+				clar_report_timings();
+			}
+
 			if (!found) {
 				clar_print_onabort("No suite matching '%s' found.\n", argument);
 				exit(-1);
@@ -476,6 +475,11 @@ clar_test_run()
 		size_t i;
 		for (i = 0; i < _clar_suite_count; ++i)
 			clar_run_suite(&_clar_suites[i], NULL);
+
+		if (_clar.report_benchmarks) {
+			puts("");
+			clar_report_timings();
+		}
 	}
 
 	return _clar.total_errors;
