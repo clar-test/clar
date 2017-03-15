@@ -47,6 +47,7 @@ static void clar_print_ontest(const char *test_name, int test_number, enum cl_te
 	case CL_TEST_OK: printf("."); break;
 	case CL_TEST_FAILURE: printf("F"); break;
 	case CL_TEST_SKIP: printf("S"); break;
+	case CL_TEST_BROKEN: printf("B"); break;
 	}
 
 	fflush(stdout);

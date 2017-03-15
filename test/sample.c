@@ -82,3 +82,9 @@ void test_sample__ptr(void)
 	cl_assert_equal_p(actual, actual); /* pointers to same object */
 	cl_assert_equal_p(&actual, actual);
 }
+
+void test_sample__break(void)
+{
+	if (1 != 2)
+		cl_break("Fix numbers!");
+}
