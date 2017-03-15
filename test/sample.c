@@ -88,3 +88,13 @@ void test_sample__break(void)
 	if (1 != 2)
 		cl_break("Fix numbers!");
 }
+
+void test_sample__expected_breakage(void)
+{
+	cl_must_break(file_size("test/nonexistent") > 0);
+}
+
+void test_sample__unbroken(void)
+{
+	cl_must_break(file_size("test/nonexistent") < 0);
+}

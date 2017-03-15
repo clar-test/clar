@@ -20,6 +20,8 @@ static void clar_print_error(int num, const struct clar_error *error)
 {
 	if (error->status == CL_TEST_FAILURE)
 		printf("  %d) Failure:\n", num);
+	else if (error->status == CL_TEST_UNBROKEN)
+		printf("  %d) Unbroken:\n", num);
 	else
 		return;
 
@@ -48,6 +50,7 @@ static void clar_print_ontest(const char *test_name, int test_number, enum cl_te
 	case CL_TEST_FAILURE: printf("F"); break;
 	case CL_TEST_SKIP: printf("S"); break;
 	case CL_TEST_BROKEN: printf("B"); break;
+	case CL_TEST_UNBROKEN: printf("U"); break;
 	}
 
 	fflush(stdout);
