@@ -82,3 +82,33 @@ void test_sample__ptr(void)
 	cl_assert_equal_p(actual, actual); /* pointers to same object */
 	cl_assert_equal_p(&actual, actual);
 }
+
+void test_sample__bench_loop(void)
+{
+	int i;
+
+	for (i = 0; i < 1000000; i++) {
+	}
+}
+
+void test_sample__bench_loop2(void)
+{
+	int i;
+
+	for (i = 0; i < 1000000; i++) {
+		int dummy = i*1000;
+		dummy = dummy;
+	}
+}
+
+void test_sample__bench_reset_timer(void)
+{
+	int i;
+
+	for (i = 0; i < 100000000; i++) {
+		int dummy = i*1000;
+		dummy = dummy;
+	}
+
+	cl_reset_timer();
+}

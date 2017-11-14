@@ -106,6 +106,15 @@ struct clar_error {
 	struct clar_error *next;
 };
 
+struct clar_timing {
+	const char *test;
+	const char *suite;
+
+	double elapsed;
+
+	struct clar_timing *next;
+};
+
 static struct {
 	int argc;
 	char **argv;
@@ -124,8 +133,15 @@ static struct {
 	int exit_on_error;
 	int report_suite_names;
 
+	int report_benchmarks;
+	double timing_start;
+	double timing_end;
+
 	struct clar_error *errors;
 	struct clar_error *last_error;
+
+	struct clar_timing *timings;
+	struct clar_timing *last_timing;
 
 	void (*local_cleanup)(void *);
 	void *local_cleanup_payload;
@@ -156,6 +172,7 @@ struct clar_suite {
 static void clar_print_init(int test_count, int suite_count, const char *suite_names);
 static void clar_print_shutdown(int test_count, int suite_count, int error_count);
 static void clar_print_error(int num, const struct clar_error *error);
+static void clar_print_timing(const struct clar_timing *timing);
 static void clar_print_ontest(const char *test_name, int test_number, enum cl_test_status failed);
 static void clar_print_onsuite(const char *suite_name, int suite_index);
 static void clar_print_onabort(const char *msg, ...);
@@ -163,6 +180,12 @@ static void clar_print_onabort(const char *msg, ...);
 /* From clar_sandbox.c */
 static void clar_unsandbox(void);
 static int clar_sandbox(void);
+
+/* From time.h */
+/**
+ * Return the time from a monotonic timer.
+ */
+static double clar_timer(void);
 
 /* Load the declarations for the test suite */
 #include "clar.suite"
@@ -204,12 +227,30 @@ clar_report_errors(void)
 }
 
 static void
+clar_report_timings(void)
+{
+	struct clar_timing *timing, *next;
+
+	timing = _clar.timings;
+
+	while (timing != NULL) {
+		next = timing->next;
+		clar_print_timing(timing);
+		free(timing);
+		timing = next;
+	}
+
+}
+
+static void
 clar_run_test(
 	const struct clar_func *test,
 	const struct clar_func *initialize,
 	const struct clar_func *cleanup)
 {
 	_clar.test_status = CL_TEST_OK;
+	_clar.timing_start = 0.0;
+	_clar.timing_end = 0.0;
 	_clar.trampoline_enabled = 1;
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
@@ -219,7 +260,9 @@ clar_run_test(
 			initialize->ptr();
 
 		CL_TRACE(CL_TRACE__TEST__RUN_BEGIN);
+		_clar.timing_start = clar_timer();
 		test->ptr();
+		_clar.timing_end = clar_timer();
 		CL_TRACE(CL_TRACE__TEST__RUN_END);
 	}
 
@@ -245,6 +288,8 @@ clar_run_test(
 		clar_print_ontest(test->name, _clar.tests_ran, _clar.test_status);
 	}
 }
+
+static void clar_store_timing(void);
 
 static void
 clar_run_suite(const struct clar_suite *suite, const char *filter)
@@ -287,6 +332,8 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 
 		if (_clar.exit_on_error && _clar.total_errors)
 			return;
+
+		clar_store_timing();
 	}
 
 	_clar.active_test = NULL;
@@ -305,6 +352,7 @@ clar_usage(const char *arg)
 	printf("  -q    \tOnly report tests that had an error\n");
 	printf("  -Q    \tQuit as soon as a test fails\n");
 	printf("  -l    \tPrint suite names\n");
+	printf("  -b    \tReport test benchmarks\n");
 	exit(-1);
 }
 
@@ -362,12 +410,21 @@ clar_parse_args(int argc, char **argv)
 				}
 			}
 
+			if (_clar.report_benchmarks) {
+				puts("");
+				clar_report_timings();
+			}
+
 			if (!found) {
 				clar_print_onabort("No suite matching '%s' found.\n", argument);
 				exit(-1);
 			}
 			break;
 		}
+
+		case 'b':
+			_clar.report_benchmarks = 1;
+			break;
 
 		case 'q':
 			_clar.report_errors_only = 1;
@@ -424,6 +481,11 @@ clar_test_run()
 		size_t i;
 		for (i = 0; i < _clar_suite_count; ++i)
 			clar_run_suite(&_clar_suites[i], NULL);
+
+		if (_clar.report_benchmarks) {
+			puts("");
+			clar_report_timings();
+		}
 	}
 
 	return _clar.total_errors;
@@ -453,6 +515,29 @@ clar_test(int argc, char **argv)
 	return errors;
 }
 
+static void clar_store_timing(void)
+{
+	struct clar_timing *timing;
+
+	/* Failed tests jump over the timing code */
+	if (_clar.timing_end == 0)
+		return;
+
+	timing = calloc(1, sizeof(struct clar_timing));
+
+	if (_clar.timings == NULL)
+		_clar.timings = timing;
+
+	if (_clar.last_timing != NULL)
+		_clar.last_timing->next = timing;
+
+	_clar.last_timing = timing;
+
+	timing->elapsed = _clar.timing_end - _clar.timing_start;
+	timing->test = _clar.active_test;
+	timing->suite = _clar.active_suite;
+}
+
 static void abort_test(void)
 {
 	if (!_clar.trampoline_enabled) {
@@ -464,6 +549,11 @@ static void abort_test(void)
 
 	CL_TRACE(CL_TRACE__TEST__LONGJMP);
 	longjmp(_clar.trampoline, -1);
+}
+
+void clar__reset_timer(void)
+{
+	_clar.timing_start = clar_timer();
 }
 
 void clar__skip(void)
@@ -646,3 +736,4 @@ void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 #include "clar/fixtures.h"
 #include "clar/fs.h"
 #include "clar/print.h"
+#include "clar/time.h"
