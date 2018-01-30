@@ -140,17 +140,17 @@ class TestSuite(object):
 
         return False
 
-    def find_modules(self):
+    def find_modules(self, cplusplus = False):
         modules = []
         for root, _, files in os.walk(self.path):
             module_root = root[len(self.path):]
             module_root = [c for c in module_root.split(os.sep) if c]
 
-            tests_in_module = fnmatch.filter(files, "*.c")
+            tests_in_module = fnmatch.filter(files, "*.cpp" if cplusplus else "*.c")
 
             for test_file in tests_in_module:
                 full_path = os.path.join(root, test_file)
-                module_name = "_".join(module_root + [test_file[:-2]]).replace("-", "_")
+                module_name = "_".join(module_root + [os.path.splitext(test_file)[0]]).replace("-", "_")
 
                 modules.append((full_path, module_name))
 
@@ -174,8 +174,8 @@ class TestSuite(object):
         with open(path, 'wb') as cache:
             pickle.dump(self.modules, cache)
 
-    def load(self, force = False):
-        module_data = self.find_modules()
+    def load(self, cplusplus = False, force = False):
+        module_data = self.find_modules(cplusplus)
         self.modules = {} if force else self.load_cache()
 
         for path, name in module_data:
@@ -232,12 +232,13 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('-f', '--force', action="store_true", dest='force', default=False)
     parser.add_option('-x', '--exclude', dest='excluded', action='append', default=[])
+    parser.add_option('--cplusplus', action='store_true', dest="cplusplus", default=False)
 
     options, args = parser.parse_args()
 
     for path in args or ['.']:
         suite = TestSuite(path)
-        suite.load(options.force)
+        suite.load(options.cplusplus, options.force)
         suite.disable(options.excluded)
         if suite.write():
             print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))

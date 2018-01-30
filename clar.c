@@ -480,7 +480,7 @@ void clar__fail(
 	const char *description,
 	int should_abort)
 {
-	struct clar_error *error = calloc(1, sizeof(struct clar_error));
+	struct clar_error *error = (struct clar_error *)calloc(1, sizeof(struct clar_error));
 
 	if (_clar.errors == NULL)
 		_clar.errors = error;

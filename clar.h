@@ -9,6 +9,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum cl_test_status {
 	CL_TEST_OK,
 	CL_TEST_FAILURE,
@@ -157,5 +161,9 @@ void clar__assert_equal(
 	int should_abort,
 	const char *fmt,
 	...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
