@@ -86,6 +86,8 @@
 	typedef struct stat STAT_T;
 #endif
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+
 #include "clar.h"
 
 static void fs_rm(const char *_source);
@@ -145,7 +147,7 @@ static struct {
 
 	int report_errors_only;
 	int exit_on_error;
-	int report_suite_names;
+	int verbosity;
 
 	int write_summary;
 	char *summary_filename;
@@ -186,7 +188,7 @@ struct clar_suite {
 static void clar_print_init(int test_count, int suite_count, const char *suite_names);
 static void clar_print_shutdown(int test_count, int suite_count, int error_count);
 static void clar_print_error(int num, const struct clar_report *report, const struct clar_error *error);
-static void clar_print_ontest(const char *test_name, int test_number, enum cl_test_status failed);
+static void clar_print_ontest(const char *suite_name, const char *test_name, int test_number, enum cl_test_status failed);
 static void clar_print_onsuite(const char *suite_name, int suite_index);
 static void clar_print_onabort(const char *msg, ...);
 
@@ -247,6 +249,7 @@ clar_report_all(void)
 
 static void
 clar_run_test(
+	const struct clar_suite *suite,
 	const struct clar_func *test,
 	const struct clar_func *initialize,
 	const struct clar_func *cleanup)
@@ -286,7 +289,7 @@ clar_run_test(
 	if (_clar.report_errors_only) {
 		clar_report_errors(_clar.last_report);
 	} else {
-		clar_print_ontest(test->name, _clar.tests_ran, _clar.last_report->status);
+		clar_print_ontest(suite->name, test->name, _clar.tests_ran, _clar.last_report->status);
 	}
 }
 
@@ -352,7 +355,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 
 		_clar.last_report = report;
 
-		clar_run_test(&test[i], &suite->initialize, &suite->cleanup);
+		clar_run_test(suite, &test[i], &suite->initialize, &suite->cleanup);
 
 		if (_clar.exit_on_error && _clar.total_errors)
 			return;
@@ -427,7 +430,7 @@ clar_parse_args(int argc, char **argv)
 					++found;
 
 					if (!exact)
-						_clar.report_suite_names = 1;
+						_clar.verbosity = MAX(_clar.verbosity, 1);
 
 					switch (action) {
 					case 's': {
@@ -486,7 +489,7 @@ clar_parse_args(int argc, char **argv)
 		}
 
 		case 'v':
-			_clar.report_suite_names = 1;
+			_clar.verbosity++;
 			break;
 
 		case 'r':
