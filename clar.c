@@ -495,7 +495,7 @@ clar_parse_args(int argc, char **argv)
 		case 'r':
 			_clar.write_summary = 1;
 			free(_clar.summary_filename);
-			_clar.summary_filename = strdup(*(argument + 2) ? (argument + 2) : "summary.xml");
+			_clar.summary_filename = *(argument + 2) ? strdup(argument + 2) : NULL;
 			break;
 
 		default:
@@ -507,6 +507,8 @@ clar_parse_args(int argc, char **argv)
 void
 clar_test_init(int argc, char **argv)
 {
+	const char *summary_env;
+
 	if (argc > 1)
 		clar_parse_args(argc, argv);
 
@@ -516,10 +518,14 @@ clar_test_init(int argc, char **argv)
 		""
 	);
 
-	if ((_clar.summary_filename = getenv("CLAR_SUMMARY")) != NULL) {
+	if (!_clar.summary_filename &&
+	    (summary_env = getenv("CLAR_SUMMARY")) != NULL) {
 		_clar.write_summary = 1;
-		_clar.summary_filename = strdup(_clar.summary_filename);
+		_clar.summary_filename = strdup(summary_env);
 	}
+
+	if (_clar.write_summary && !_clar.summary_filename)
+		_clar.summary_filename = strdup("summary.xml");
 
 	if (_clar.write_summary &&
 	    !(_clar.summary = clar_summary_init(_clar.summary_filename))) {

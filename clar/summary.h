@@ -63,10 +63,13 @@ struct clar_summary *clar_summary_init(const char *filename)
 	struct clar_summary *summary;
 	FILE *fp;
 
-	if ((fp = fopen(filename, "w")) == NULL)
+	if ((fp = fopen(filename, "w")) == NULL) {
+		perror("fopen");
 		return NULL;
+	}
 
 	if ((summary = malloc(sizeof(struct clar_summary))) == NULL) {
+		perror("malloc");
 		fclose(fp);
 		return NULL;
 	}
