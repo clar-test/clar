@@ -12,6 +12,8 @@
 #include <math.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include <time.h>
+#include <sys/time.h>
 
 /* required for sandboxing */
 #include <sys/types.h>
@@ -119,6 +121,8 @@ struct clar_report {
 	const char *suite;
 
 	enum cl_test_status status;
+	time_t start;
+	double elapsed;
 
 	struct clar_error *errors;
 	struct clar_error *last_error;
@@ -254,6 +258,9 @@ clar_run_test(
 	const struct clar_func *initialize,
 	const struct clar_func *cleanup)
 {
+	struct timeval start, end;
+	struct timezone tz;
+
 	_clar.trampoline_enabled = 1;
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
@@ -262,15 +269,23 @@ clar_run_test(
 		if (initialize->ptr != NULL)
 			initialize->ptr();
 
+		_clar.last_report->start = time(NULL);
+		gettimeofday(&start, &tz);
+
 		CL_TRACE(CL_TRACE__TEST__RUN_BEGIN);
 		test->ptr();
 		CL_TRACE(CL_TRACE__TEST__RUN_END);
 	}
 
+	gettimeofday(&end, &tz);
+
 	_clar.trampoline_enabled = 0;
 
 	if (_clar.last_report->status == CL_TEST_NOTRUN)
 		_clar.last_report->status = CL_TEST_OK;
+
+	_clar.last_report->elapsed = ((double)end.tv_sec + (double)end.tv_usec / 1.0E6) -
+	                             ((double)start.tv_sec + (double)start.tv_usec / 1.0E6);
 
 	if (_clar.local_cleanup != NULL)
 		_clar.local_cleanup(_clar.local_cleanup_payload);

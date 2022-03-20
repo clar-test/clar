@@ -20,8 +20,8 @@ int clar_summary_testsuites(struct clar_summary *summary)
 }
 
 int clar_summary_testsuite(struct clar_summary *summary,
-    int idn, const char *name, const char *pkg, time_t timestamp,
-    double elapsed, int test_count, int fail_count, int error_count)
+    int idn, const char *name, time_t timestamp,
+    int test_count, int fail_count, int error_count)
 {
 	struct tm *tm = localtime(&timestamp);
 	char iso_dt[20];
@@ -29,17 +29,15 @@ int clar_summary_testsuite(struct clar_summary *summary,
 	if (strftime(iso_dt, sizeof(iso_dt), "%Y-%m-%dT%H:%M:%S", tm) == 0)
 		return -1;
 
-	return fprintf(summary->fp, "\t<testsuite "
+	return fprintf(summary->fp, "\t<testsuite"
 		       " id=\"%d\""
 		       " name=\"%s\""
-		       " package=\"%s\""
 		       " hostname=\"localhost\""
 		       " timestamp=\"%s\""
-		       " time=\"%.2f\""
 		       " tests=\"%d\""
 		       " failures=\"%d\""
 		       " errors=\"%d\">\n",
-		       idn, name, pkg, iso_dt, elapsed, test_count, fail_count, error_count);
+		       idn, name, iso_dt, test_count, fail_count, error_count);
 }
 
 int clar_summary_testcase(struct clar_summary *summary,
@@ -93,14 +91,14 @@ int clar_summary_shutdown(struct clar_summary *summary)
 		struct clar_error *error = report->errors;
 
 		if (last_suite == NULL || strcmp(last_suite, report->suite) != 0) {
-			if (clar_summary_testsuite(summary, 0, report->suite, "",
-			    time(NULL), 0, _clar.tests_ran, _clar.total_errors, 0) < 0)
+			if (clar_summary_testsuite(summary, 0, report->suite,
+			    report->start, _clar.tests_ran, _clar.total_errors, 0) < 0)
 				goto on_error;
 		}
 
 		last_suite = report->suite;
 
-		clar_summary_testcase(summary, report->test, "what", 0);
+		clar_summary_testcase(summary, report->test, report->suite, report->elapsed);
 
 		while (error != NULL) {
 			if (clar_summary_failure(summary, "assert",
