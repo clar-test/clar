@@ -56,6 +56,11 @@ int clar_summary_failure(struct clar_summary *summary,
 	    type, message, desc);
 }
 
+int clar_summary_skipped(struct clar_summary *summary)
+{
+	return fprintf(summary->fp, "\t\t\t<skipped />\n");
+}
+
 struct clar_summary *clar_summary_init(const char *filename)
 {
 	struct clar_summary *summary;
@@ -107,6 +112,9 @@ int clar_summary_shutdown(struct clar_summary *summary)
 
 			error = error->next;
 		}
+
+		if (report->status == CL_TEST_SKIP)
+			clar_summary_skipped(summary);
 
 		if (clar_summary_close_tag(summary, "testcase", 2) < 0)
 			goto on_error;
