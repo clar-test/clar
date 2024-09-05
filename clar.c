@@ -189,7 +189,7 @@ static void clar_print_onabort(const char *msg, ...);
 
 /* From clar_sandbox.c */
 static void clar_unsandbox(void);
-static int clar_sandbox(void);
+static void clar_sandbox(void);
 
 /* From summary.h */
 static struct clar_summary *clar_summary_init(const char *filename);
@@ -570,8 +570,7 @@ clar_test_init(int argc, char **argv)
 	if (_clar.write_summary)
 	    _clar.summary = clar_summary_init(_clar.summary_filename);
 
-	if (clar_sandbox() < 0)
-		clar_abort("Failed to sandbox the test runner.\n");
+	clar_sandbox();
 }
 
 int

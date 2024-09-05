@@ -142,15 +142,14 @@ static int build_sandbox_path(void)
 	return 0;
 }
 
-static int clar_sandbox(void)
+static void clar_sandbox(void)
 {
 	if (_clar_path[0] == '\0' && build_sandbox_path() < 0)
-		return -1;
+		clar_abort("Failed to build sandbox path.\n");
 
 	if (chdir(_clar_path) != 0)
-		return -1;
-
-	return 0;
+		clar_abort("Failed to change into sandbox directory '%s': %s.\n",
+			   _clar_path, strerror(errno));
 }
 
 const char *clar_sandbox_path(void)
