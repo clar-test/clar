@@ -567,10 +567,8 @@ clar_test_init(int argc, char **argv)
 	if (_clar.write_summary && !_clar.summary_filename)
 		_clar.summary_filename = strdup("summary.xml");
 
-	if (_clar.write_summary &&
-	    !(_clar.summary = clar_summary_init(_clar.summary_filename)))
-		clar_abort("Failed to open the summary file '%s': %s.\n",
-			   _clar.summary_filename, strerror(errno));
+	if (_clar.write_summary)
+	    _clar.summary = clar_summary_init(_clar.summary_filename);
 
 	if (clar_sandbox() < 0)
 		clar_abort("Failed to sandbox the test runner.\n");
