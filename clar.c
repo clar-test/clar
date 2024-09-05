@@ -13,6 +13,7 @@
 #include <stdarg.h>
 #include <wchar.h>
 #include <time.h>
+#include <inttypes.h>
 
 /* required for sandboxing */
 #include <sys/types.h>
@@ -61,13 +62,6 @@
 #		define p_snprintf snprintf
 #	endif
 
-#	ifndef PRIuZ
-#		define PRIuZ "Iu"
-#	endif
-#	ifndef PRIxZ
-#		define PRIxZ "Ix"
-#	endif
-
 #	if defined(_MSC_VER) || (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
 	typedef struct stat STAT_T;
 #	else
@@ -78,12 +72,6 @@
 #	include <unistd.h>
 #	define _MAIN_CC
 #	define p_snprintf snprintf
-#	ifndef PRIuZ
-#		define PRIuZ "zu"
-#	endif
-#	ifndef PRIxZ
-#		define PRIxZ "zx"
-#	endif
 	typedef struct stat STAT_T;
 #endif
 
@@ -102,7 +90,7 @@ fixture_path(const char *base, const char *fixture_name);
 struct clar_error {
 	const char *file;
 	const char *function;
-	size_t line_number;
+	uintmax_t line_number;
 	const char *error_msg;
 	char *description;
 
@@ -796,8 +784,8 @@ void clar__assert_equal(
 			}
 		}
 	}
-	else if (!strcmp("%"PRIuZ, fmt) || !strcmp("%"PRIxZ, fmt)) {
-		size_t sz1 = va_arg(args, size_t), sz2 = va_arg(args, size_t);
+	else if (!strcmp("%"PRIuMAX, fmt) || !strcmp("%"PRIxMAX, fmt)) {
+		uintmax_t sz1 = va_arg(args, uintmax_t), sz2 = va_arg(args, uintmax_t);
 		is_equal = (sz1 == sz2);
 		if (!is_equal) {
 			int offset = p_snprintf(buf, sizeof(buf), fmt, sz1);
