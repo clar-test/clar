@@ -2,7 +2,7 @@ find_package(Python COMPONENTS Interpreter REQUIRED)
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/clar.suite"
 	COMMAND "${Python_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/generate.py" --output "${CMAKE_CURRENT_BINARY_DIR}"
-	DEPENDS main.c sample.c
+	DEPENDS main.c sample.c clar_test.h
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
@@ -15,7 +15,7 @@ set_target_properties(clar_test PROPERTIES
 
 # MSVC generates all kinds of warnings. We may want to fix these in the future
 # and then unconditionally treat warnings as errors.
-if (NOT MSVC)
+if(NOT MSVC)
 	set_target_properties(clar_test PROPERTIES
 		COMPILE_WARNING_AS_ERROR ON
 	)

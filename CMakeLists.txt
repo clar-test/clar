@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25.0)
+cmake_minimum_required(VERSION 3.16..3.29)
 
 project(clar LANGUAGES C)
 
@@ -20,6 +20,9 @@ set_target_properties(clar PROPERTIES
 	C_EXTENSIONS OFF
 )
 
-if(BUILD_TESTS)
-	add_subdirectory(test)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	include(CTest)
+	if(BUILD_TESTING)
+		add_subdirectory(test)
+	endif()
 endif()
