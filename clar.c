@@ -19,9 +19,9 @@
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#	define WIN32_LEAN_AND_MEAN
 #	include <windows.h>
 #	include <io.h>
-#	include <shellapi.h>
 #	include <direct.h>
 
 #	define _MAIN_CC __cdecl
@@ -68,7 +68,7 @@
 #		define PRIxZ "Ix"
 #	endif
 
-#	if defined(_MSC_VER) || defined(__MINGW32__)
+#	if defined(_MSC_VER) || (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
 	typedef struct stat STAT_T;
 #	else
 	typedef struct _stat STAT_T;
