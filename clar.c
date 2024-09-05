@@ -5,6 +5,7 @@
  * For full terms see the included COPYING file.
  */
 #include <assert.h>
+#include <errno.h>
 #include <setjmp.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -183,6 +184,7 @@ static void clar_print_shutdown(int test_count, int suite_count, int error_count
 static void clar_print_error(int num, const struct clar_report *report, const struct clar_error *error);
 static void clar_print_ontest(const char *suite_name, const char *test_name, int test_number, enum cl_test_status failed);
 static void clar_print_onsuite(const char *suite_name, int suite_index);
+static void clar_print_onabortv(const char *msg, va_list argp);
 static void clar_print_onabort(const char *msg, ...);
 
 /* From clar_sandbox.c */
@@ -205,6 +207,15 @@ static int clar_summary_shutdown(struct clar_summary *fp);
 							   _clar.active_test,						\
 							   _clar.trace_payload);					\
 	} while (0)
+
+static void clar_abort(const char *msg, ...)
+{
+	va_list argp;
+	va_start(argp, msg);
+	clar_print_onabortv(msg, argp);
+	va_end(argp);
+	exit(-1);
+}
 
 void cl_trace_register(cl_trace_cb *cb, void *payload)
 {
@@ -491,10 +502,8 @@ clar_parse_args(int argc, char **argv)
 				}
 			}
 
-			if (!found) {
-				clar_print_onabort("No suite matching '%s' found.\n", argument);
-				exit(-1);
-			}
+			if (!found)
+				clar_abort("No suite matching '%s' found.\n", argument);
 			break;
 		}
 
@@ -559,15 +568,12 @@ clar_test_init(int argc, char **argv)
 		_clar.summary_filename = strdup("summary.xml");
 
 	if (_clar.write_summary &&
-	    !(_clar.summary = clar_summary_init(_clar.summary_filename))) {
-		clar_print_onabort("Failed to open the summary file\n");
-		exit(-1);
-	}
+	    !(_clar.summary = clar_summary_init(_clar.summary_filename)))
+		clar_abort("Failed to open the summary file '%s': %s.\n",
+			   _clar.summary_filename, strerror(errno));
 
-	if (clar_sandbox() < 0) {
-		clar_print_onabort("Failed to sandbox the test runner.\n");
-		exit(-1);
-	}
+	if (clar_sandbox() < 0)
+		clar_abort("Failed to sandbox the test runner.\n");
 }
 
 int
@@ -601,10 +607,9 @@ clar_test_shutdown(void)
 
 	clar_unsandbox();
 
-	if (_clar.write_summary && clar_summary_shutdown(_clar.summary) < 0) {
-		clar_print_onabort("Failed to write the summary file\n");
-		exit(-1);
-	}
+	if (_clar.write_summary && clar_summary_shutdown(_clar.summary) < 0)
+		clar_abort("Failed to write the summary file '%s: %s.\n",
+			   _clar.summary_filename, strerror(errno));
 
 	for (explicit = _clar.explicit; explicit; explicit = explicit_next) {
 		explicit_next = explicit->next;
@@ -635,7 +640,7 @@ static void abort_test(void)
 {
 	if (!_clar.trampoline_enabled) {
 		clar_print_onabort(
-				"Fatal error: a cleanup method raised an exception.");
+				"Fatal error: a cleanup method raised an exception.\n");
 		clar_report_errors(_clar.last_report);
 		exit(-1);
 	}
