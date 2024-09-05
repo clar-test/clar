@@ -518,7 +518,7 @@ fs_rm(const char *path)
 void
 cl_fs_cleanup(void)
 {
-	clar_unsandbox();
-	clar_sandbox();
+	clar_tempdir_shutdown();
+	clar_tempdir_init();
 }
 #endif
