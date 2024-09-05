@@ -4,7 +4,7 @@
  * This file is part of clar, distributed under the ISC license.
  * For full terms see the included COPYING file.
  */
-#include <assert.h>
+
 #include <errno.h>
 #include <setjmp.h>
 #include <stdlib.h>
@@ -546,7 +546,8 @@ clar_parse_args(int argc, char **argv)
 			break;
 
 		default:
-			assert(!"Unexpected commandline argument!");
+			clar_abort("Unexpected commandline argument '%s'.\n",
+				   argument[1]);
 		}
 	}
 }
