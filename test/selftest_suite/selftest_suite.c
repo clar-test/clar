@@ -74,7 +74,7 @@ void test_selftest_suite__bool(void)
 
 void test_selftest_suite__ptr(void)
 {
-	const char *actual = "expected";
-	cl_assert_equal_p(actual, actual); /* pointers to same object */
-	cl_assert_equal_p(&actual, actual);
+	void *p1 = (void *)0x1, *p2 = (void *)0x2;
+	cl_assert_equal_p(p1, p1); /* pointers to same object */
+	cl_assert_equal_p(p1, p2);
 }
