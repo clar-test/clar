@@ -28,8 +28,14 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
     - name: Build
+      shell: bash
       run: |
         mkdir build
         cd build
         cmake .. -G "${{matrix.platform.generator}}"
-        cmake --build .
+        cmake --build . --verbose
+    - name: Test
+      shell: bash
+      run: |
+        cd build
+        CTEST_OUTPUT_ON_FAILURE=1 ctest --build-config Debug
