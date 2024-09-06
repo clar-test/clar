@@ -13,6 +13,11 @@ jobs:
         platform:
           - os: ubuntu-latest
             generator: Unix Makefiles
+          - os: ubuntu-latest
+            generator: Unix Makefiles
+            env:
+              CC: "clang"
+              CFLAGS: "-fsanitize=leak"
           - os: macos-latest
             generator: Unix Makefiles
           - os: windows-latest
@@ -23,6 +28,10 @@ jobs:
             generator: MinGW Makefiles
 
     runs-on: ${{ matrix.platform.os }}
+
+    env:
+      CC: ${{matrix.platform.env.CC}}
+      CFLAGS: ${{matrix.platform.env.CFLAGS}}
 
     steps:
     - name: Check out
