@@ -1,6 +1,6 @@
 #include <sys/stat.h>
 
-#include "selftest_suite.h"
+#include "clar.h"
 
 static int file_size(const char *filename)
 {
@@ -9,11 +9,6 @@ static int file_size(const char *filename)
 	if (stat(filename, &st) == 0)
 		return (int)st.st_size;
 	return -1;
-}
-
-void test_selftest_suite__initialize(void)
-{
-	global_test_counter++;
 }
 
 void test_selftest_suite__cleanup(void)

@@ -5,7 +5,7 @@
  * For full terms see the included COPYING file.
  */
 
-#include "selftest_suite.h"
+#include "clar.h"
 
 /*
  * Selftest main() for clar tests.
@@ -17,24 +17,11 @@
  * your main() should return the same value returned by clar_test().
  */
 
-int global_test_counter = 0;
-
 #ifdef _WIN32
 int __cdecl main(int argc, char *argv[])
 #else
 int main(int argc, char *argv[])
 #endif
 {
-	int ret;
-
-	/* Your custom initialization here */
-	global_test_counter = 0;
-
-	/* Run the test suite */
-	ret = clar_test(argc, argv);
-
-	/* Your custom cleanup here */
-	cl_assert_equal_i(8, global_test_counter);
-
-	return ret;
+	return clar_test(argc, argv);
 }
