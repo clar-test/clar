@@ -28,6 +28,7 @@ target_sources(selftest_suite PRIVATE
 )
 target_compile_definitions(selftest_suite PRIVATE
 	CLAR_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/resources/"
+	CLAR_SELFTEST
 	_DARWIN_C_SOURCE
 	_POSIX_C_SOURCE=200809L
 )
