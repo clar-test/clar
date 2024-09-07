@@ -410,7 +410,7 @@ clar_usage(const char *arg)
 	printf("  -t            Display results in tap format\n");
 	printf("  -l            Print suite names\n");
 	printf("  -r[filename]  Write summary file (to the optional filename)\n");
-	exit(-1);
+	exit(1);
 }
 
 static void
@@ -493,7 +493,7 @@ clar_parse_args(int argc, char **argv)
 
 			if (!found) {
 				clar_print_onabort("No suite matching '%s' found.\n", argument);
-				exit(-1);
+				exit(1);
 			}
 			break;
 		}
@@ -561,12 +561,12 @@ clar_test_init(int argc, char **argv)
 	if (_clar.write_summary &&
 	    !(_clar.summary = clar_summary_init(_clar.summary_filename))) {
 		clar_print_onabort("Failed to open the summary file\n");
-		exit(-1);
+		exit(1);
 	}
 
 	if (clar_sandbox() < 0) {
 		clar_print_onabort("Failed to sandbox the test runner.\n");
-		exit(-1);
+		exit(1);
 	}
 }
 
@@ -603,7 +603,7 @@ clar_test_shutdown(void)
 
 	if (_clar.write_summary && clar_summary_shutdown(_clar.summary) < 0) {
 		clar_print_onabort("Failed to write the summary file\n");
-		exit(-1);
+		exit(1);
 	}
 
 	for (explicit = _clar.explicit; explicit; explicit = explicit_next) {
@@ -637,7 +637,7 @@ static void abort_test(void)
 		clar_print_onabort(
 				"Fatal error: a cleanup method raised an exception.");
 		clar_report_errors(_clar.last_report);
-		exit(-1);
+		exit(1);
 	}
 
 	CL_TRACE(CL_TRACE__TEST__LONGJMP);
