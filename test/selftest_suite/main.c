@@ -5,10 +5,10 @@
  * For full terms see the included COPYING file.
  */
 
-#include "clar_test.h"
+#include "selftest_suite.h"
 
 /*
- * Sample main() for clar tests.
+ * Selftest main() for clar tests.
  *
  * You should write your own main routine for clar tests that does specific
  * setup and teardown as necessary for your application.  The only required
