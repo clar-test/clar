@@ -1,5 +1,6 @@
-#include "clar_test.h"
 #include <sys/stat.h>
+
+#include "selftest_suite.h"
 
 static int file_size(const char *filename)
 {
@@ -10,19 +11,19 @@ static int file_size(const char *filename)
 	return -1;
 }
 
-void test_sample__initialize(void)
+void test_selftest_suite__initialize(void)
 {
 	global_test_counter++;
 }
 
-void test_sample__cleanup(void)
+void test_selftest_suite__cleanup(void)
 {
 	cl_fixture_cleanup("test");
 
 	cl_assert(file_size("test/file") == -1);
 }
 
-void test_sample__1(void)
+void test_selftest_suite__1(void)
 {
 	cl_assert(1);
 	cl_must_pass(0);  /* 0 == success */
@@ -30,7 +31,7 @@ void test_sample__1(void)
 	cl_must_pass(-1); /* demonstrate a failing call */
 }
 
-void test_sample__2(void)
+void test_selftest_suite__2(void)
 {
 	cl_fixture_sandbox("test");
 
@@ -39,7 +40,7 @@ void test_sample__2(void)
 	cl_assert(100 == 101);
 }
 
-void test_sample__strings(void)
+void test_selftest_suite__strings(void)
 {
 	const char *actual = "expected";
 	cl_assert_equal_s("expected", actual);
@@ -47,7 +48,7 @@ void test_sample__strings(void)
 	cl_assert_equal_s_("mismatched", actual, "this one fails");
 }
 
-void test_sample__strings_with_length(void)
+void test_selftest_suite__strings_with_length(void)
 {
 	const char *actual = "expected";
 	cl_assert_equal_strn("expected_", actual, 8);
@@ -56,27 +57,27 @@ void test_sample__strings_with_length(void)
 	cl_assert_equal_strn_("exactly", actual, 3, "this one fails");
 }
 
-void test_sample__int(void)
+void test_selftest_suite__int(void)
 {
 	int value = 100;
 	cl_assert_equal_i(100, value);
 	cl_assert_equal_i_(101, value, "extra note on failing test");
 }
 
-void test_sample__int_fmt(void)
+void test_selftest_suite__int_fmt(void)
 {
 	int value = 100;
 	cl_assert_equal_i_fmt(022, value, "%04o");
 }
 
-void test_sample__bool(void)
+void test_selftest_suite__bool(void)
 {
 	int value = 100;
 	cl_assert_equal_b(1, value);       /* test equality as booleans */
 	cl_assert_equal_b(0, value);
 }
 
-void test_sample__ptr(void)
+void test_selftest_suite__ptr(void)
 {
 	const char *actual = "expected";
 	cl_assert_equal_p(actual, actual); /* pointers to same object */
