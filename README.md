@@ -26,8 +26,7 @@ Can you count to funk?
     ~~~~ sh
     $ mkdir tests
     $ cp -r $CLAR_ROOT/clar* tests
-    $ cp $CLAR_ROOT/test/clar_test.h tests
-    $ cp $CLAR_ROOT/test/main.c.sample tests/main.c
+    $ cp $CLAR_ROOT/example/*.c tests
     ~~~~
 
 - **One: Write some tests**
@@ -147,7 +146,7 @@ To use Clar:
 
 1. copy the Clar boilerplate to your test directory
 2. copy (and probably modify) the sample `main.c` (from
-   `$CLAR_PATH/test/main.c.sample`)
+   `$CLAR_PATH/example/main.c`)
 3. run the Clar mixer (a.k.a. `generate.py`) to scan your test directory and
    write out the test suite metadata.
 4. compile your test files and the Clar boilerplate into a single test
@@ -159,7 +158,7 @@ The Clar boilerplate gives you a set of useful test assertions and features
 the `clar.c` and `clar.h` files, plus the code in the `clar/` subdirectory.
 You should not need to edit these files.
 
-The sample `main.c` (i.e. `$CLAR_PATH/test/main.c.sample`) file invokes
+The sample `main.c` (i.e. `$CLAR_PATH/example/main.c`) file invokes
 `clar_test(argc, argv)` to run the tests.  Usually, you will edit this file
 to perform any framework specific initialization and teardown that you need.
 

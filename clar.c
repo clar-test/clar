@@ -211,7 +211,7 @@ static void clar_abort(const char *msg, ...)
 	va_start(argp, msg);
 	clar_print_onabortv(msg, argp);
 	va_end(argp);
-	exit(-1);
+	exit(1);
 }
 
 void cl_trace_register(cl_trace_cb *cb, void *payload)
@@ -419,7 +419,7 @@ clar_usage(const char *arg)
 	printf("  -t            Display results in tap format\n");
 	printf("  -l            Print suite names\n");
 	printf("  -r[filename]  Write summary file (to the optional filename)\n");
-	exit(-1);
+	exit(1);
 }
 
 static void
@@ -646,7 +646,7 @@ static void abort_test(void)
 		clar_print_onabort(
 				"Fatal error: a cleanup method raised an exception.\n");
 		clar_report_errors(_clar.last_report);
-		exit(-1);
+		exit(1);
 	}
 
 	CL_TRACE(CL_TRACE__TEST__LONGJMP);
@@ -810,7 +810,8 @@ void clar__assert_equal(
 		void *p1 = va_arg(args, void *), *p2 = va_arg(args, void *);
 		is_equal = (p1 == p2);
 		if (!is_equal)
-			p_snprintf(buf, sizeof(buf), "%p != %p", p1, p2);
+			p_snprintf(buf, sizeof(buf), "0x%"PRIxPTR" != 0x%"PRIxPTR,
+				   (uintptr_t)p1, (uintptr_t)p2);
 	}
 	else {
 		int i1 = va_arg(args, int), i2 = va_arg(args, int);
