@@ -30,6 +30,9 @@
 
 #	ifndef stat
 #		define stat(path, st) _stat(path, st)
+		typedef struct _stat STAT_T;
+#	else
+		typedef struct stat STAT_T;
 #	endif
 #	ifndef mkdir
 #		define mkdir(path, mode) _mkdir(path)
@@ -61,12 +64,6 @@
 #		define p_snprintf(buf,sz,fmt,...) _snprintf_s(buf,sz,_TRUNCATE,fmt,__VA_ARGS__)
 #	else
 #		define p_snprintf snprintf
-#	endif
-
-#	if defined(_MSC_VER) || (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
-	typedef struct stat STAT_T;
-#	else
-	typedef struct _stat STAT_T;
 #	endif
 #else
 #	include <sys/wait.h> /* waitpid(2) */
