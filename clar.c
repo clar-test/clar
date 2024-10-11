@@ -5,6 +5,9 @@
  * For full terms see the included COPYING file.
  */
 
+#define _DARWIN_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+
 #include <errno.h>
 #include <setjmp.h>
 #include <stdlib.h>
