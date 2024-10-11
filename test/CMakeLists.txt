@@ -28,8 +28,6 @@ target_sources(clar_test PRIVATE
 )
 target_compile_definitions(clar_test PRIVATE
 	CLAR_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/resources/"
-	_DARWIN_C_SOURCE
-	_POSIX_C_SOURCE=200809L
 )
 target_compile_options(clar_test PRIVATE
 	$<IF:$<CXX_COMPILER_ID:MSVC>,/W4,-Wall>
