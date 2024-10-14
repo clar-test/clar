@@ -5,8 +5,9 @@
  * For full terms see the included COPYING file.
  */
 
+#define _BSD_SOURCE
 #define _DARWIN_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
 
 #include <errno.h>
 #include <setjmp.h>

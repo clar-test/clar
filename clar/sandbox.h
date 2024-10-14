@@ -128,7 +128,7 @@ static int build_sandbox_path(void)
 
 	if (mkdir(_clar_path, 0700) != 0)
 		return -1;
-#elif defined(__TANDEM)
+#elif defined(__sun) || defined(__TANDEM)
 	if (mktemp(_clar_path) == NULL)
 		return -1;
 
