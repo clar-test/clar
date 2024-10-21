@@ -4,8 +4,8 @@
  * This file is part of clar, distributed under the ISC license.
  * For full terms see the included COPYING file.
  */
-#ifndef __CLAR_TEST__
-#define __CLAR_TEST__
+#ifndef __SELFTEST__
+#define __SELFTEST__
 
 /* Import the standard clar helper functions */
 #include "clar.h"
