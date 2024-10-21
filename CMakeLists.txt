@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.16..3.29)
 
 project(clar LANGUAGES C)
 
-option(BUILD_TESTS "Build test executable" ON)
-
 add_library(clar INTERFACE)
 target_sources(clar INTERFACE
 	clar.c
