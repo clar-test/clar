@@ -24,6 +24,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if defined(__UCLIBC__) && ! defined(__UCLIBC_HAS_WCHAR__)
+	/*
+	 * uClibc can optionally be built without wchar support, in which case
+	 * the installed <wchar.h> is a stub that only defines the `whar_t`
+	 * type but none of the functions typically declared by it.
+	 */
+#else
+#	define CLAR_HAVE_WCHAR
+#endif
+
 #ifdef _WIN32
 #	define WIN32_LEAN_AND_MEAN
 #	include <windows.h>
@@ -766,6 +776,7 @@ void clar__assert_equal(
 			}
 		}
 	}
+#ifdef CLAR_HAVE_WCHAR
 	else if (!strcmp("%ls", fmt)) {
 		const wchar_t *wcs1 = va_arg(args, const wchar_t *);
 		const wchar_t *wcs2 = va_arg(args, const wchar_t *);
@@ -801,6 +812,7 @@ void clar__assert_equal(
 			}
 		}
 	}
+#endif /* CLAR_HAVE_WCHAR */
 	else if (!strcmp("%"PRIuMAX, fmt) || !strcmp("%"PRIxMAX, fmt)) {
 		uintmax_t sz1 = va_arg(args, uintmax_t), sz2 = va_arg(args, uintmax_t);
 		is_equal = (sz1 == sz2);
