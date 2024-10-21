@@ -423,7 +423,7 @@ clar_usage(const char *arg)
 	printf("  -t            Display results in tap format\n");
 	printf("  -l            Print suite names\n");
 	printf("  -r[filename]  Write summary file (to the optional filename)\n");
-	exit(-1);
+	exit(1);
 }
 
 static void
@@ -650,7 +650,7 @@ static void abort_test(void)
 		clar_print_onabort(
 				"Fatal error: a cleanup method raised an exception.\n");
 		clar_report_errors(_clar.last_report);
-		exit(-1);
+		exit(1);
 	}
 
 	CL_TRACE(CL_TRACE__TEST__LONGJMP);
