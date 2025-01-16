@@ -635,6 +635,14 @@ clar_test_shutdown(void)
 	}
 
 	for (report = _clar.reports; report; report = report_next) {
+		struct clar_error *error, *error_next;
+
+		for (error = report->errors; error; error = error_next) {
+			free(error->description);
+			error_next = error->next;
+			free(error);
+		}
+
 		report_next = report->next;
 		free(report);
 	}
