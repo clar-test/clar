@@ -47,8 +47,8 @@ static void clar_print_clap_ontest(const char *suite_name, const char *test_name
 		switch (status) {
 		case CL_TEST_OK: printf("ok\n"); break;
 		case CL_TEST_FAILURE: printf("fail\n"); break;
-		case CL_TEST_SKIP: printf("skipped"); break;
-		case CL_TEST_NOTRUN: printf("notrun"); break;
+		case CL_TEST_SKIP: printf("skipped\n"); break;
+		case CL_TEST_NOTRUN: printf("notrun\n"); break;
 		}
 	} else {
 		switch (status) {
