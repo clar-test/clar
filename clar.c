@@ -117,9 +117,10 @@ struct clar_explicit {
 };
 
 struct clar_report {
-	const char *test;
-	int test_number;
 	const char *suite;
+	const char *test;
+	const char *description;
+	int test_number;
 
 	enum cl_test_status status;
 	time_t start;
@@ -139,8 +140,9 @@ struct clar_summary {
 static struct {
 	enum cl_test_status test_status;
 
-	const char *active_test;
 	const char *active_suite;
+	const char *active_test;
+	const char *active_description;
 
 	int total_skipped;
 	int total_errors;
@@ -177,6 +179,7 @@ static struct {
 
 struct clar_func {
 	const char *name;
+	const char *description;
 	void (*ptr)(void);
 };
 
@@ -365,6 +368,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 
 	_clar.active_suite = suite->name;
 	_clar.active_test = NULL;
+	_clar.active_description = NULL;
 	CL_TRACE(CL_TRACE__SUITE_BEGIN);
 
 	if (filter) {
@@ -393,11 +397,13 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 			continue;
 
 		_clar.active_test = test[i].name;
+		_clar.active_description = test[i].description;
 
 		if ((report = calloc(1, sizeof(*report))) == NULL)
 			clar_abort("Failed to allocate report.\n");
 		report->suite = _clar.active_suite;
 		report->test = _clar.active_test;
+		report->description = _clar.active_description;
 		report->test_number = _clar.tests_ran;
 		report->status = CL_TEST_NOTRUN;
 
@@ -416,6 +422,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 	}
 
 	_clar.active_test = NULL;
+	_clar.active_description = NULL;
 	CL_TRACE(CL_TRACE__SUITE_END);
 }
 
@@ -700,7 +707,7 @@ void clar__fail(
 	const char *function,
 	size_t line,
 	const char *error_msg,
-	const char *description,
+	const char *error_description,
 	int should_abort)
 {
 	struct clar_error *error;
@@ -721,8 +728,8 @@ void clar__fail(
 	error->line_number = line;
 	error->error_msg = error_msg;
 
-	if (description != NULL &&
-	    (error->description = strdup(description)) == NULL)
+	if (error_description != NULL &&
+	    (error->description = strdup(error_description)) == NULL)
 		clar_abort("Failed to allocate description.\n");
 
 	_clar.total_errors++;
@@ -738,13 +745,13 @@ void clar__assert(
 	const char *function,
 	size_t line,
 	const char *error_msg,
-	const char *description,
+	const char *error_description,
 	int should_abort)
 {
 	if (condition)
 		return;
 
-	clar__fail(file, function, line, error_msg, description, should_abort);
+	clar__fail(file, function, line, error_msg, error_description, should_abort);
 }
 
 void clar__assert_equal(
