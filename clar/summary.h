@@ -42,11 +42,22 @@ static int clar_summary_testsuite(struct clar_summary *summary,
 }
 
 static int clar_summary_testcase(struct clar_summary *summary,
-    const char *name, const char *classname, double elapsed)
+	const struct clar_report *report)
 {
-	return fprintf(summary->fp,
+	if (fprintf(summary->fp,
 	    "\t\t<testcase name=\"%s\" classname=\"%s\" time=\"%.2f\">\n",
-		name, classname, elapsed);
+	    report->test, report->suite, report->elapsed) < 0)
+		return -1;
+
+	if (report->description) {
+		fprintf(summary->fp, "\t\t\t<properties>\n");
+		fprintf(summary->fp, "\t\t\t\t<property name=\"description\">\n");
+		fprintf(summary->fp, "\t\t\t\t\t%s\n", report->description);
+		fprintf(summary->fp, "\t\t\t\t</property>\n");
+		fprintf(summary->fp, "\t\t\t</properties>\n");
+	}
+
+	return 0;
 }
 
 static int clar_summary_failure(struct clar_summary *summary,
@@ -100,7 +111,7 @@ int clar_summary_shutdown(struct clar_summary *summary)
 
 		last_suite = report->suite;
 
-		clar_summary_testcase(summary, report->test, report->suite, report->elapsed);
+		clar_summary_testcase(summary, report);
 
 		while (error != NULL) {
 			if (clar_summary_failure(summary, "assert",

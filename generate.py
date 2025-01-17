@@ -17,8 +17,12 @@ class Module(object):
 
         def _render_callback(self, cb):
             if not cb:
-                return '    { NULL, NULL }'
-            return '    { "%s", &%s }' % (cb['short_name'], cb['symbol'])
+                return '    { NULL, NULL, NULL }'
+
+            return '    { "%s", %s, &%s }' % \
+                (cb['short_name'], \
+                 '"' + cb['description'] + '"' if cb['description'] != None else "NULL", \
+                 cb['symbol'])
 
     class DeclarationTemplate(Template):
         def render(self):
@@ -87,7 +91,7 @@ class Module(object):
 
     def _skip_comments(self, text):
         SKIP_COMMENTS_REGEX = re.compile(
-            r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+            r'//.*?$|/\*(?!\s*\[clar\]:).*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
             re.DOTALL | re.MULTILINE)
 
         def _replacer(match):
@@ -97,20 +101,49 @@ class Module(object):
         return re.sub(SKIP_COMMENTS_REGEX, _replacer, text)
 
     def parse(self, contents):
-        TEST_FUNC_REGEX = r"^(void\s+(test_%s__(\w+))\s*\(\s*void\s*\))\s*\{"
+        TEST_FUNC_REGEX = r"^(void\s+(%s_%s__(\w+))\s*\(\s*void\s*\))(?:\s*/\*\s*\[clar\]:\s*(.*?)\s*\*/)?\s*\{"
 
         contents = self._skip_comments(contents)
-        regex = re.compile(TEST_FUNC_REGEX % self.name, re.MULTILINE)
+        regex = re.compile(TEST_FUNC_REGEX % (self.prefix, self.name), re.MULTILINE)
 
         self.callbacks = []
         self.initializers = []
         self.cleanup = None
 
-        for (declaration, symbol, short_name) in regex.findall(contents):
+        for (declaration, symbol, short_name, options) in regex.findall(contents):
+            description = None
+
+            while options != '':
+                match = re.search(r'^([a-zA-Z0-9]+)=(\"[^"]*\"|[a-zA-Z0-9_\-]+|\d+)(?:,\s*|\Z)(.*)', options)
+
+                if match == None:
+                    print("Invalid options: '%s' for '%s'" % (options, symbol))
+                    sys.exit(1)
+
+                key = match.group(1)
+                value = match.group(2)
+                options = match.group(3)
+
+                match = re.search(r'^\"(.*)\"$', value)
+                if match != None:
+                    value = match.group(1)
+
+                match = re.search(r'([^a-zA-Z0-9 _\-,\.])', value)
+                if match != None:
+                    print("Invalid character '%s' in %s for '%s'" % (match.group(1), key, symbol))
+                    sys.exit(1)
+
+                if key == "description":
+                    description = value
+                else:
+                    print("Invalid option: '%s' for '%s'" % (key, symbol))
+                    sys.exit(1)
+
             data = {
                 "short_name" : short_name,
                 "declaration" : declaration,
-                "symbol" : symbol
+                "symbol" : symbol,
+                "description" : description
             }
 
             if short_name.startswith('initialize'):
