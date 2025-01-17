@@ -34,7 +34,7 @@ class Module(object):
 
     class CallbacksTemplate(Template):
         def render(self):
-            out = "static const struct clar_func _clar_cb_%s[] = {\n" % self.module.name
+            out = "static const struct %s_func _%s_cb_%s[] = {\n" % (self.module.app_name, self.module.app_name, self.module.name)
             out += ",\n".join(self._render_callback(cb) for cb in self.module.callbacks)
             out += "\n};\n"
             return out
@@ -65,7 +65,7 @@ class Module(object):
                     clean_name = name,
                     initialize = self._render_callback(initializer),
                     cleanup = self._render_callback(self.module.cleanup),
-                    cb_ptr = "_clar_cb_%s" % self.module.name,
+                    cb_ptr = "_%s_cb_%s" % (self.module.app_name, self.module.name),
                     cb_count = len(self.module.callbacks),
                     enabled = int(self.module.enabled)
                 )
@@ -73,8 +73,10 @@ class Module(object):
 
             return ','.join(templates)
 
-    def __init__(self, name):
+    def __init__(self, name, app_name, prefix):
         self.name = name
+        self.app_name = app_name
+        self.prefix = prefix
 
         self.mtime = None
         self.enabled = True
@@ -172,8 +174,8 @@ class TestSuite(object):
 
         return modules
 
-    def load_cache(self):
-        path = os.path.join(self.output, '.clarcache')
+    def load_cache(self, app_name):
+        path = os.path.join(self.output, ".%scache" % app_name)
         cache = {}
 
         try:
@@ -185,18 +187,18 @@ class TestSuite(object):
 
         return cache
 
-    def save_cache(self):
-        path = os.path.join(self.output, '.clarcache')
+    def save_cache(self, app_name):
+        path = os.path.join(self.output, ".%scache" % app_name)
         with open(path, 'wb') as cache:
             pickle.dump(self.modules, cache)
 
-    def load(self, force = False):
+    def load(self, app_name, prefix, force = False):
         module_data = self.find_modules()
-        self.modules = {} if force else self.load_cache()
+        self.modules = {} if force else self.load_cache(app_name)
 
         for path, name in module_data:
             if name not in self.modules:
-                self.modules[name] = Module(name)
+                self.modules[name] = Module(name, app_name, prefix)
 
             if not self.modules[name].refresh(path):
                 del self.modules[name]
@@ -215,8 +217,8 @@ class TestSuite(object):
     def callback_count(self):
         return sum(len(module.callbacks) for module in self.modules.values())
 
-    def write(self):
-        output = os.path.join(self.output, 'clar.suite')
+    def write(self, name):
+        output = os.path.join(self.output, "%s.suite" % name)
 
         if not self.should_generate(output):
             return False
@@ -232,16 +234,17 @@ class TestSuite(object):
                 t = Module.CallbacksTemplate(module)
                 data.write(t.render())
 
-            suites = "static struct clar_suite _clar_suites[] = {" + ','.join(
+            suites = "static struct %s_suite _%s_suites[] = {" % (name, name)
+            suites += ','.join(
                 Module.InfoTemplate(module).render() for module in modules
             ) + "\n};\n"
 
             data.write(suites)
 
-            data.write("static const size_t _clar_suite_count = %d;\n" % self.suite_count())
-            data.write("static const size_t _clar_callback_count = %d;\n" % self.callback_count())
+            data.write("static const size_t _%s_suite_count = %d;\n" % (name, self.suite_count()))
+            data.write("static const size_t _%s_callback_count = %d;\n" % (name, self.callback_count()))
 
-        self.save_cache()
+        self.save_cache(name)
         return True
 
 if __name__ == '__main__':
@@ -251,6 +254,8 @@ if __name__ == '__main__':
     parser.add_option('-f', '--force', action="store_true", dest='force', default=False)
     parser.add_option('-x', '--exclude', dest='excluded', action='append', default=[])
     parser.add_option('-o', '--output', dest='output')
+    parser.add_option('-n', '--name', dest='name', default='clar')
+    parser.add_option('-p', '--prefix', dest='prefix', default='test')
 
     options, args = parser.parse_args()
     if len(args) > 1:
@@ -260,7 +265,7 @@ if __name__ == '__main__':
     path = args.pop() if args else '.'
     output = options.output or path
     suite = TestSuite(path, output)
-    suite.load(options.force)
+    suite.load(options.name, options.prefix, options.force)
     suite.disable(options.excluded)
-    if suite.write():
-        print("Written `clar.suite` (%d tests in %d suites)" % (suite.callback_count(), suite.suite_count()))
+    if suite.write(options.name):
+        print("Written `%s.suite` (%d tests in %d suites)" % (options.name, suite.callback_count(), suite.suite_count()))
