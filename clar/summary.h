@@ -45,7 +45,7 @@ static int clar_summary_testcase(struct clar_summary *summary,
 	const struct clar_report *report)
 {
 	if (fprintf(summary->fp,
-	    "\t\t<testcase name=\"%s\" classname=\"%s\" time=\"%.2f\">\n",
+	    "\t\t<testcase name=\"%s\" classname=\"%s\" time=\"%f\">\n",
 	    report->test, report->suite, report->elapsed) < 0)
 		return -1;
 

@@ -208,7 +208,7 @@ struct clar_suite {
 	int enabled;
 };
 
-/* From clar_print_*.c */
+/* From print.h */
 static void clar_print_init(int test_count, int suite_count);
 static void clar_print_shutdown(int test_count, int suite_count, int error_count);
 static void clar_print_error(int num, const struct clar_report *report, const struct clar_error *error);
@@ -217,7 +217,7 @@ static void clar_print_onsuite(const char *suite_name, int suite_index);
 static void clar_print_onabortv(const char *msg, va_list argp);
 static void clar_print_onabort(const char *msg, ...);
 
-/* From clar_sandbox.c */
+/* From sandbox.c */
 static void clar_tempdir_init(void);
 static void clar_tempdir_shutdown(void);
 static int clar_sandbox_create(const char *suite_name, const char *test_name);
@@ -226,6 +226,8 @@ static int clar_sandbox_cleanup(void);
 /* From summary.h */
 static struct clar_summary *clar_summary_init(const char *filename);
 static int clar_summary_shutdown(struct clar_summary *fp);
+
+#include "clar/counter.h"
 
 /* Load the declarations for the test suite */
 #include "clar.suite"
@@ -283,35 +285,6 @@ clar_report_all(void)
 	}
 }
 
-#ifdef WIN32
-# define clar_time DWORD
-
-static void clar_time_now(clar_time *out)
-{
-	*out = GetTickCount();
-}
-
-static double clar_time_diff(clar_time *start, clar_time *end)
-{
-	return ((double)*end - (double)*start) / 1000;
-}
-#else
-# include <sys/time.h>
-
-# define clar_time struct timeval
-
-static void clar_time_now(clar_time *out)
-{
-	gettimeofday(out, NULL);
-}
-
-static double clar_time_diff(clar_time *start, clar_time *end)
-{
-	return ((double)end->tv_sec + (double)end->tv_usec / 1.0E6) -
-	       ((double)start->tv_sec + (double)start->tv_usec / 1.0E6);
-}
-#endif
-
 static void
 clar_run_test(
 	const struct clar_suite *suite,
@@ -319,16 +292,17 @@ clar_run_test(
 	const struct clar_func *initialize,
 	const struct clar_func *cleanup)
 {
-	clar_time start, end;
+	struct clar_counter start, end;
 
 	_clar.trampoline_enabled = 1;
+	_clar.last_report->start = time(NULL);
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
 
 	clar_sandbox_create(suite->name, test->name);
 
 	_clar.last_report->start = time(NULL);
-	clar_time_now(&start);
+	clar_counter_now(&start);
 
 	if (setjmp(_clar.trampoline) == 0) {
 		if (initialize->ptr != NULL)
@@ -339,14 +313,14 @@ clar_run_test(
 		CL_TRACE(CL_TRACE__TEST__RUN_END);
 	}
 
-	clar_time_now(&end);
+	clar_counter_now(&end);
 
 	_clar.trampoline_enabled = 0;
 
 	if (_clar.last_report->status == CL_TEST_NOTRUN)
 		_clar.last_report->status = CL_TEST_OK;
 
-	_clar.last_report->elapsed = clar_time_diff(&start, &end);
+	_clar.last_report->elapsed = clar_counter_diff(&start, &end);
 
 	if (_clar.local_cleanup != NULL)
 		_clar.local_cleanup(_clar.local_cleanup_payload);
