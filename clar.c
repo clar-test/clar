@@ -164,6 +164,10 @@ static struct {
 	struct clar_report *reports;
 	struct clar_report *last_report;
 
+	const char *invoke_file;
+	const char *invoke_func;
+	size_t invoke_line;
+
 	void (*local_cleanup)(void *);
 	void *local_cleanup_payload;
 
@@ -327,6 +331,8 @@ clar_run_test(
 
 	if (_clar.local_cleanup != NULL)
 		_clar.local_cleanup(_clar.local_cleanup_payload);
+
+	clar__clear_invokepoint();
 
 	if (cleanup->ptr != NULL)
 		cleanup->ptr();
@@ -703,9 +709,9 @@ void clar__fail(
 
 	_clar.last_report->last_error = error;
 
-	error->file = file;
-	error->function = function;
-	error->line_number = line;
+	error->file = _clar.invoke_file ? _clar.invoke_file : file;
+	error->function = _clar.invoke_func ? _clar.invoke_func : function;
+	error->line_number = _clar.invoke_line ? _clar.invoke_line : line;
 	error->error_msg = error_msg;
 
 	if (description != NULL &&
@@ -857,6 +863,23 @@ void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 {
 	_clar.local_cleanup = cleanup;
 	_clar.local_cleanup_payload = opaque;
+}
+
+void clar__set_invokepoint(
+	const char *file,
+	const char *func,
+	size_t line)
+{
+	_clar.invoke_file = file;
+	_clar.invoke_func = func;
+	_clar.invoke_line = line;
+}
+
+void clar__clear_invokepoint(void)
+{
+	_clar.invoke_file = NULL;
+	_clar.invoke_func = NULL;
+	_clar.invoke_line = 0;
 }
 
 #include "clar/sandbox.h"

@@ -239,43 +239,43 @@ static void run(const char *expected_output_file, int expected_error_code, ...)
 
 void test_selftest__help(void)
 {
-	run("help", 1, "-h", NULL);
+	cl_invoke(run("help", 1, "-h", NULL));
 }
 
 void test_selftest__without_arguments(void)
 {
-	run("without_arguments", 8, NULL);
+	cl_invoke(run("without_arguments", 8, NULL));
 }
 
 void test_selftest__specific_test(void)
 {
-	run("specific_test", 1, "-sselftest::suite::bool", NULL);
+	cl_invoke(run("specific_test", 1, "-sselftest::suite::bool", NULL));
 }
 
 void test_selftest__stop_on_failure(void)
 {
-	run("stop_on_failure", 1, "-Q", NULL);
+	cl_invoke(run("stop_on_failure", 1, "-Q", NULL));
 }
 
 void test_selftest__quiet(void)
 {
-	run("quiet", 8, "-q", NULL);
+	cl_invoke(run("quiet", 8, "-q", NULL));
 }
 
 void test_selftest__tap(void)
 {
-	run("tap", 8, "-t", NULL);
+	cl_invoke(run("tap", 8, "-t", NULL));
 }
 
 void test_selftest__suite_names(void)
 {
-	run("suite_names", 0, "-l", NULL);
+	cl_invoke(run("suite_names", 0, "-l", NULL));
 }
 
 void test_selftest__summary_without_filename(void)
 {
 	struct stat st;
-	run("summary_without_filename", 8, "-r", NULL);
+	cl_invoke(run("summary_without_filename", 8, "-r", NULL));
 	/* The summary contains timestamps, so we cannot verify its contents. */
 	cl_must_pass(stat("summary.xml", &st));
 }
@@ -283,7 +283,7 @@ void test_selftest__summary_without_filename(void)
 void test_selftest__summary_with_filename(void)
 {
 	struct stat st;
-	run("summary_with_filename", 8, "-rdifferent.xml", NULL);
+	cl_invoke(run("summary_with_filename", 8, "-rdifferent.xml", NULL));
 	/* The summary contains timestamps, so we cannot verify its contents. */
 	cl_must_pass(stat("different.xml", &st));
 }
