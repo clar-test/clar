@@ -31,6 +31,11 @@
 # define CLAR_CURRENT_FUNC "func"
 #endif
 
+enum cl_test_mode {
+	CL_TEST_STANDARD,
+	CL_TEST_BENCHMARK,
+};
+
 enum cl_test_status {
 	CL_TEST_OK,
 	CL_TEST_FAILURE,
@@ -41,10 +46,17 @@ enum cl_test_status {
 enum cl_output_format {
 	CL_OUTPUT_CLAP,
 	CL_OUTPUT_TAP,
+	CL_OUTPUT_TIMING,
+};
+
+enum cl_summary_format {
+	CL_SUMMARY_JUNIT,
+	CL_SUMMARY_JSON,
 };
 
 /** Setup clar environment */
 void clar_test_init(int argc, char *argv[]);
+void clar_test_set_mode(enum cl_test_mode mode);
 int clar_test_run(void);
 void clar_test_shutdown(void);
 
