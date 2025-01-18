@@ -207,6 +207,114 @@ static void clar_print_tap_onabort(const char *fmt, va_list arg)
 	fflush(stdout);
 }
 
+/* timings format: useful for benchmarks */
+
+static void clar_print_timing_init(int test_count, int suite_count)
+{
+	(void)test_count;
+	(void)suite_count;
+
+	printf("Started benchmarks (mean time ± stddev / min time … max time):\n\n");
+}
+
+static void clar_print_timing_shutdown(int test_count, int suite_count, int error_count)
+{
+	(void)test_count;
+	(void)suite_count;
+	(void)error_count;
+}
+
+static void clar_print_timing_error(int num, const struct clar_report *report, const struct clar_error *error)
+{
+	(void)num;
+	(void)report;
+	(void)error;
+}
+
+static void clar_print_timing_test_start(const char *suite_name, const char *test_name, int test_number)
+{
+	(void)test_number;
+
+	printf("%s::%s:  ", suite_name, test_name);
+	fflush(stdout);
+}
+
+static void clar_print_timing_time(double t)
+{
+	static const char *units[] = { "sec", "ms", "μs", "ns" };
+	static const int units_len = sizeof(units) / sizeof(units[0]);
+	int unit = 0, exponent = 0, digits;
+
+	while (t < 1.0 && unit < units_len - 1) {
+		t *= 1000.0;
+		unit++;
+	}
+
+	while (t > 0.0 && t < 1.0 && exponent < 10) {
+		t *= 10.0;
+		exponent++;
+	}
+
+	digits = (t < 10.0) ? 3 : ((t < 100.0) ? 2 : 1);
+
+	printf("%.*f", digits, t);
+
+	if (exponent > 0)
+		printf("e-%d", exponent);
+
+	printf(" %s", units[unit]);
+}
+
+static void clar_print_timing_test_finish(const char *suite_name, const char *test_name, int test_number, const struct clar_report *report)
+{
+	const struct clar_error *error = _clar.last_report->errors;
+
+	(void)suite_name;
+	(void)test_name;
+	(void)test_number;
+
+	switch(report->status) {
+	case CL_TEST_OK:
+		clar_print_timing_time(report->time_mean);
+
+		if (report->runs > 1) {
+			printf(" ± ");
+			clar_print_timing_time(report->time_stddev);
+
+			printf(" / range: ");
+			clar_print_timing_time(report->time_min);
+			printf(" … ");
+			clar_print_timing_time(report->time_max);
+			printf("  (%d runs)", report->runs);
+		}
+
+		printf("\n");
+		break;
+	case CL_TEST_FAILURE:
+		printf("failed: %s\n", error->error_msg);
+		break;
+	case CL_TEST_SKIP:
+	case CL_TEST_NOTRUN:
+		printf("skipped\n");
+		break;
+	}
+
+	fflush(stdout);
+}
+
+static void clar_print_timing_suite_start(const char *suite_name, int suite_index)
+{
+	if (_clar.verbosity == 1)
+		printf("\n%s", suite_name);
+
+	(void)suite_index;
+}
+
+static void clar_print_timing_onabort(const char *fmt, va_list arg)
+{
+	vfprintf(stderr, fmt, arg);
+}
+
 /* indirection between protocol output selection */
 
 #define PRINT(FN, ...) do { \
@@ -216,6 +324,9 @@ static void clar_print_tap_onabort(const char *fmt, va_list arg)
 				break; \
 			case CL_OUTPUT_TAP: \
 				clar_print_tap_##FN (__VA_ARGS__); \
+				break; \
+			case CL_OUTPUT_TIMING: \
+				clar_print_timing_##FN (__VA_ARGS__); \
 				break; \
 			default: \
 				abort(); \
