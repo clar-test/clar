@@ -146,6 +146,7 @@ struct clar_summary {
 };
 
 static struct {
+	enum cl_test_mode test_mode;
 	enum cl_test_status test_status;
 
 	const char *active_suite;
@@ -159,6 +160,7 @@ static struct {
 	int suites_ran;
 
 	enum cl_output_format output_format;
+	enum cl_summary_format summary_format;
 
 	int report_errors_only;
 	int exit_on_error;
@@ -627,6 +629,14 @@ clar_test_init(int argc, char **argv)
 {
 	const char *summary_env;
 
+	if (_clar.test_mode == CL_TEST_BENCHMARK) {
+		_clar.output_format = CL_OUTPUT_TIMING;
+		_clar.summary_format = CL_SUMMARY_JSON;
+	} else {
+		_clar.output_format = CL_OUTPUT_CLAP;
+		_clar.summary_format = CL_SUMMARY_JUNIT;
+	}
+
 	if (argc > 1)
 		clar_parse_args(argc, argv);
 
@@ -651,6 +661,12 @@ clar_test_init(int argc, char **argv)
 	    _clar.summary = clar_summary_init(_clar.summary_filename);
 
 	clar_sandbox();
+}
+
+void
+clar_test_set_mode(enum cl_test_mode mode)
+{
+	_clar.test_mode = mode;
 }
 
 int
