@@ -17,11 +17,12 @@ class Module(object):
 
         def _render_callback(self, cb):
             if not cb:
-                return '    { NULL, NULL, NULL }'
+                return '    { NULL, NULL, 0, NULL }'
 
-            return '    { "%s", %s, &%s }' % \
+            return '    { "%s", %s, %d, &%s }' % \
                 (cb['short_name'], \
                  '"' + cb['description'] + '"' if cb['description'] != None else "NULL", \
+                 cb['runs'], \
                  cb['symbol'])
 
     class DeclarationTemplate(Template):
@@ -111,6 +112,7 @@ class Module(object):
         self.cleanup = None
 
         for (declaration, symbol, short_name, options) in regex.findall(contents):
+            runs = 0
             description = None
 
             while options != '':
@@ -135,6 +137,11 @@ class Module(object):
 
                 if key == "description":
                     description = value
+                elif key == "runs":
+                    if not value.isnumeric():
+                        print("Invalid option: '%s' in runs for '%s'" % (option, symbol))
+                        sys.exit(1)
+                    runs = int(value)
                 else:
                     print("Invalid option: '%s' for '%s'" % (key, symbol))
                     sys.exit(1)
@@ -143,7 +150,8 @@ class Module(object):
                 "short_name" : short_name,
                 "declaration" : declaration,
                 "symbol" : symbol,
-                "description" : description
+                "description" : description,
+                "runs" : runs
             }
 
             if short_name.startswith('initialize'):
