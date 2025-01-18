@@ -100,6 +100,7 @@
 	typedef struct stat STAT_T;
 #endif
 
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 #include "clar.h"
@@ -341,18 +342,10 @@ clar_run_test(
 	const struct clar_func *initialize,
 	const struct clar_func *cleanup)
 {
-	int runs, i;
-
-	runs = (test->runs > 0) ? test->runs : 1;
-
-	_clar.last_report->times = (runs > 1) ?
-		calloc(runs, sizeof(double)) :
-		&_clar.last_report->time_mean;
-
-	if (!_clar.last_report->times)
-		clar_abort("Failed to allocate report times.\n");
+	int runs = test->runs, i = 0;
 
 	_clar.last_report->start = time(NULL);
+	_clar.last_report->times = &_clar.last_report->time_mean;
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
 
@@ -368,16 +361,36 @@ clar_run_test(
 
 		CL_TRACE(CL_TRACE__TEST__RUN_BEGIN);
 
-		for (i = 0; i < runs; i++) {
+		do {
 			struct clar_counter start, end;
+			double elapsed;
 
 			clar_counter_now(&start);
 			test->ptr();
 			clar_counter_now(&end);
 
+			elapsed = clar_counter_diff(&start, &end);
+
+			/*
+			 * unless the number of runs was explicitly given
+			 * in benchmark mode, use the first run as a sample
+			 * to determine how many runs we should attempt
+			 */
+			if (_clar.test_mode == CL_TEST_BENCHMARK && !runs) {
+				runs = MAX(CLAR_BENCHMARK_RUN_MIN, (CLAR_BENCHMARK_RUN_TIME / elapsed));
+				runs = MIN(CLAR_BENCHMARK_RUN_MAX, runs);
+			}
+
+			if (i == 0 && runs > 1) {
+				_clar.last_report->times = calloc(runs, sizeof(double));
+
+				if (_clar.last_report->times == NULL)
+					clar_abort("Failed to allocate report times.\n");
+			}
+
 			_clar.last_report->runs++;
-			_clar.last_report->times[i] = clar_counter_diff(&start, &end);
-		}
+			_clar.last_report->times[i] = elapsed;
+		} while(++i < runs);
 
 		CL_TRACE(CL_TRACE__TEST__RUN_END);
 	}

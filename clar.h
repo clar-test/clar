@@ -21,6 +21,16 @@
 # define CLAR_MAX_PATH 4096
 #endif
 
+/*
+ * In benchmark mode, by default, clar will run the test repeatedly for
+ * approximately `CLAR_BENCHMARK_RUN_TIME` seconds, and at least
+ * `CLAR_BENCHMARK_RUN_MIN` iterations.
+ */
+
+#define CLAR_BENCHMARK_RUN_TIME 3.0
+#define CLAR_BENCHMARK_RUN_MIN  10
+#define CLAR_BENCHMARK_RUN_MAX  30000000
+
 #ifndef CLAR_SELFTEST
 # define CLAR_CURRENT_FILE __FILE__
 # define CLAR_CURRENT_LINE __LINE__
