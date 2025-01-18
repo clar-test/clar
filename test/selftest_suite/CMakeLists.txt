@@ -37,4 +37,4 @@ target_include_directories(selftest_suite PRIVATE
 	"${CMAKE_SOURCE_DIR}"
 	"${CMAKE_CURRENT_BINARY_DIR}"
 )
-target_link_libraries(selftest_suite clar)
+target_link_libraries(selftest_suite clar ${CLAR_LIBRARIES})
