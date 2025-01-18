@@ -135,9 +135,17 @@ struct clar_report {
 	const char *description;
 	int test_number;
 
+	int runs;
+
 	enum cl_test_status status;
 	time_t start;
-	double elapsed;
+
+	double *times;
+	double time_min;
+	double time_max;
+	double time_mean;
+	double time_stddev;
+	double time_total;
 
 	struct clar_error *errors;
 	struct clar_error *last_error;
@@ -196,6 +204,7 @@ static struct {
 struct clar_func {
 	const char *name;
 	const char *description;
+	int runs;
 	void (*ptr)(void);
 };
 
@@ -287,15 +296,60 @@ clar_report_all(void)
 }
 
 static void
+compute_times(void)
+{
+	double total_squares = 0;
+	int i;
+
+	_clar.last_report->time_min = _clar.last_report->times[0];
+	_clar.last_report->time_max = _clar.last_report->times[0];
+	_clar.last_report->time_total = _clar.last_report->times[0];
+
+	for (i = 1; i < _clar.last_report->runs; i++) {
+		if (_clar.last_report->times[i] < _clar.last_report->time_min)
+			_clar.last_report->time_min = _clar.last_report->times[i];
+
+		if (_clar.last_report->times[i] > _clar.last_report->time_max)
+			_clar.last_report->time_max = _clar.last_report->times[i];
+
+		_clar.last_report->time_total += _clar.last_report->times[i];
+	}
+
+	if (_clar.last_report->runs <= 1) {
+		_clar.last_report->time_stddev = 0;
+	} else {
+		_clar.last_report->time_mean = _clar.last_report->time_total / _clar.last_report->runs;
+
+		for (i = 0; i < _clar.last_report->runs; i++) {
+			double dev = (_clar.last_report->times[i] > _clar.last_report->time_mean) ?
+				_clar.last_report->times[i] - _clar.last_report->time_mean :
+				_clar.last_report->time_mean - _clar.last_report->times[i];
+
+			total_squares += (dev * dev);
+		}
+
+		_clar.last_report->time_stddev = sqrt(total_squares / _clar.last_report->runs);
+	}
+}
+
+static void
 clar_run_test(
 	const struct clar_suite *suite,
 	const struct clar_func *test,
 	const struct clar_func *initialize,
 	const struct clar_func *cleanup)
 {
-	struct clar_counter start, end;
+	int runs, i;
 
-	_clar.trampoline_enabled = 1;
+	runs = (test->runs > 0) ? test->runs : 1;
+
+	_clar.last_report->times = (runs > 1) ?
+		calloc(runs, sizeof(double)) :
+		&_clar.last_report->time_mean;
+
+	if (!_clar.last_report->times)
+		clar_abort("Failed to allocate report times.\n");
+
 	_clar.last_report->start = time(NULL);
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
@@ -303,25 +357,35 @@ clar_run_test(
 	clar_sandbox_create(suite->name, test->name);
 
 	clar_print_test_start(suite->name, test->name, _clar.tests_ran);
-	clar_counter_now(&start);
+
+	_clar.trampoline_enabled = 1;
 
 	if (setjmp(_clar.trampoline) == 0) {
 		if (initialize->ptr != NULL)
 			initialize->ptr();
 
 		CL_TRACE(CL_TRACE__TEST__RUN_BEGIN);
-		test->ptr();
+
+		for (i = 0; i < runs; i++) {
+			struct clar_counter start, end;
+
+			clar_counter_now(&start);
+			test->ptr();
+			clar_counter_now(&end);
+
+			_clar.last_report->runs++;
+			_clar.last_report->times[i] = clar_counter_diff(&start, &end);
+		}
+
 		CL_TRACE(CL_TRACE__TEST__RUN_END);
 	}
-
-	clar_counter_now(&end);
 
 	_clar.trampoline_enabled = 0;
 
 	if (_clar.last_report->status == CL_TEST_NOTRUN)
 		_clar.last_report->status = CL_TEST_OK;
 
-	_clar.last_report->elapsed = clar_counter_diff(&start, &end);
+	compute_times();
 
 	if (_clar.local_cleanup != NULL)
 		_clar.local_cleanup(_clar.local_cleanup_payload);
@@ -652,6 +716,9 @@ clar_test_shutdown(void)
 			error_next = error->next;
 			free(error);
 		}
+
+		if (report->times != &report->time_mean)
+			free(report->times);
 
 		report_next = report->next;
 		free(report);
