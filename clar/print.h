@@ -27,7 +27,7 @@ static void clar_print_clap_error(int num, const struct clar_report *report, con
 		error->file,
 		error->line_number);
 
-	printf("  %s\n", error->error_msg);
+	printf("  %s\n", error->message);
 
 	if (error->description != NULL)
 		printf("  %s\n", error->description);
@@ -145,7 +145,7 @@ static void clar_print_tap_test_finish(const char *suite_name, const char *test_
 
 		printf("    ---\n");
 		printf("    reason: |\n");
-		printf("      %s\n", error->error_msg);
+		printf("      %s\n", error->message);
 
 		if (error->description)
 			printf("      %s\n", error->description);
@@ -263,7 +263,7 @@ static void clar_print_timing_test_finish(const char *suite_name, const char *te
 		printf("\n");
 		break;
 	case CL_TEST_FAILURE:
-		printf("failed: %s\n", error->error_msg);
+		printf("failed: %s\n", error->message);
 		break;
 	case CL_TEST_SKIP:
 	case CL_TEST_NOTRUN:
