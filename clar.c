@@ -196,8 +196,9 @@ struct clar_suite {
 static void clar_print_init(int test_count, int suite_count, const char *suite_names);
 static void clar_print_shutdown(int test_count, int suite_count, int error_count);
 static void clar_print_error(int num, const struct clar_report *report, const struct clar_error *error);
-static void clar_print_ontest(const char *suite_name, const char *test_name, int test_number, enum cl_test_status failed);
-static void clar_print_onsuite(const char *suite_name, int suite_index);
+static void clar_print_suite_start(const char *suite_name, int suite_index);
+static void clar_print_test_start(const char *suite_name, const char *test_name, int test_number);
+static void clar_print_test_finish(const char *suite_name, const char *test_name, int test_number, const struct clar_report *report);
 static void clar_print_onabortv(const char *msg, va_list argp);
 static void clar_print_onabort(const char *msg, ...);
 
@@ -281,6 +282,7 @@ clar_run_test(
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
 
+	clar_print_test_start(suite->name, test->name, _clar.tests_ran);
 	clar_counter_now(&start);
 
 	if (setjmp(_clar.trampoline) == 0) {
@@ -318,7 +320,7 @@ clar_run_test(
 	if (_clar.report_errors_only) {
 		clar_report_errors(_clar.last_report);
 	} else {
-		clar_print_ontest(suite->name, test->name, _clar.tests_ran, _clar.last_report->status);
+		clar_print_test_finish(suite->name, test->name, _clar.tests_ran, _clar.last_report);
 	}
 }
 
@@ -337,7 +339,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 		return;
 
 	if (!_clar.report_errors_only)
-		clar_print_onsuite(suite->name, ++_clar.suites_ran);
+		clar_print_suite_start(suite->name, ++_clar.suites_ran);
 
 	_clar.active_suite = suite->name;
 	_clar.active_test = NULL;
