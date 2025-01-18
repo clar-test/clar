@@ -441,18 +441,11 @@ clar_parse_args(int argc, char **argv)
 {
 	int i;
 
-	/* Verify options before execute */
 	for (i = 1; i < argc; ++i) {
 		char *argument = argv[i];
 
-		if (argument[0] != '-' || argument[1] == '\0'
-		    || strchr("sixvqQtlr", argument[1]) == NULL) {
+		if (argument[0] != '-' || argument[1] == '\0')
 			clar_usage(argv[0]);
-		}
-	}
-
-	for (i = 1; i < argc; ++i) {
-		char *argument = argv[i];
 
 		switch (argument[1]) {
 		case 's':
@@ -465,8 +458,13 @@ clar_parse_args(int argc, char **argv)
 			argument += offset;
 			arglen = strlen(argument);
 
-			if (arglen == 0)
-				clar_usage(argv[0]);
+			if (arglen == 0) {
+				if (i + 1 == argc)
+					clar_usage(argv[0]);
+
+				argument = argv[++i];
+				arglen = strlen(argument);
+			}
 
 			for (j = 0; j < _clar_suite_count; ++j) {
 				suitelen = strlen(_clar_suites[j].name);
@@ -482,9 +480,6 @@ clar_parse_args(int argc, char **argv)
 					    continue;
 
 					++found;
-
-					if (!exact)
-						_clar.verbosity = MAX(_clar.verbosity, 1);
 
 					switch (action) {
 					case 's': {
@@ -517,23 +512,37 @@ clar_parse_args(int argc, char **argv)
 
 			if (!found)
 				clar_abort("No suite matching '%s' found.\n", argument);
+
 			break;
 		}
 
 		case 'q':
+			if (argument[2] != '\0')
+				clar_usage(argv[0]);
+
 			_clar.report_errors_only = 1;
 			break;
 
 		case 'Q':
+			if (argument[2] != '\0')
+				clar_usage(argv[0]);
+
 			_clar.exit_on_error = 1;
 			break;
 
 		case 't':
+			if (argument[2] != '\0')
+				clar_usage(argv[0]);
+
 			_clar.output_format = CL_OUTPUT_TAP;
 			break;
 
 		case 'l': {
 			size_t j;
+
+			if (argument[2] != '\0')
+				clar_usage(argv[0]);
+
 			printf("Test suites (use -s<name> to run just one):\n");
 			for (j = 0; j < _clar_suite_count; ++j)
 				printf(" %3d: %s\n", (int)j, _clar_suites[j].name);
@@ -542,23 +551,27 @@ clar_parse_args(int argc, char **argv)
 		}
 
 		case 'v':
+			if (argument[2] != '\0')
+				clar_usage(argv[0]);
+
 			_clar.verbosity++;
 			break;
 
 		case 'r':
 			_clar.write_summary = 1;
 			free(_clar.summary_filename);
+
 			if (*(argument + 2)) {
 				if ((_clar.summary_filename = strdup(argument + 2)) == NULL)
 					clar_abort("Failed to allocate summary filename.\n");
 			} else {
 				_clar.summary_filename = NULL;
 			}
+
 			break;
 
 		default:
-			clar_abort("Unexpected commandline argument '%s'.\n",
-				   argument[1]);
+			clar_usage(argv[0]);
 		}
 	}
 }
