@@ -25,4 +25,4 @@ target_include_directories(example PRIVATE
 	"${CMAKE_SOURCE_DIR}"
 	"${CMAKE_CURRENT_BINARY_DIR}"
 )
-target_link_libraries(example clar)
+target_link_libraries(example clar ${CLAR_LIBRARIES})
