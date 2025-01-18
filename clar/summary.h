@@ -124,7 +124,7 @@ int clar_summary_junit_shutdown(struct clar_summary *summary)
 
 		while (error != NULL) {
 			if (clar_summary_junit_failure(summary, "assert",
-			    error->error_msg, error->description) < 0)
+			    error->message, error->description) < 0)
 				goto on_error;
 
 			error = error->next;
@@ -244,7 +244,7 @@ int clar_summary_json_shutdown(struct clar_summary *summary)
 					fprintf(summary->fp, ",\n");
 
 				fprintf(summary->fp, "          {\n");
-				fprintf(summary->fp, "            \"message\": \"%s\",\n", error->error_msg);
+				fprintf(summary->fp, "            \"message\": \"%s\",\n", error->message);
 
 				if (error->description)
 					fprintf(summary->fp, "            \"description\": \"%s\",\n", error->description);
