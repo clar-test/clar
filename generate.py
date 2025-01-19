@@ -32,6 +32,9 @@ class Module(object):
             for initializer in self.module.initializers:
                 out += "extern %s;\n" % initializer['declaration']
 
+            if self.module.reset:
+                out += "extern %s;\n" % self.module.reset['declaration']
+
             if self.module.cleanup:
                 out += "extern %s;\n" % self.module.cleanup['declaration']
 
@@ -63,12 +66,14 @@ class Module(object):
     {
         "${clean_name}",
     ${initialize},
+    ${reset},
     ${cleanup},
         ${cb_ptr}, ${cb_count}, ${enabled}
     }"""
                 ).substitute(
                     clean_name = name,
                     initialize = self._render_callback(initializer),
+                    reset = self._render_callback(self.module.reset),
                     cleanup = self._render_callback(self.module.cleanup),
                     cb_ptr = "_%s_cb_%s" % (self.module.app_name, self.module.name),
                     cb_count = len(self.module.callbacks),
@@ -109,6 +114,7 @@ class Module(object):
 
         self.callbacks = []
         self.initializers = []
+        self.reset = None
         self.cleanup = None
 
         for (declaration, symbol, short_name, options) in regex.findall(contents):
@@ -156,6 +162,8 @@ class Module(object):
 
             if short_name.startswith('initialize'):
                 self.initializers.append(data)
+            elif short_name == 'reset':
+                self.reset = data
             elif short_name == 'cleanup':
                 self.cleanup = data
             else:
