@@ -505,6 +505,7 @@ clar_usage(const char *arg)
 	printf("  -q            Only report tests that had an error\n");
 	printf("  -Q            Quit as soon as a test fails\n");
 	printf("  -t            Display results in tap format\n");
+	printf("  -b            Run in benchmark mode, displaying times\n");
 	printf("  -l            Print suite names\n");
 	printf("  -r[filename]  Write summary file (to the optional filename)\n");
 	exit(1);
@@ -609,6 +610,15 @@ clar_parse_args(int argc, char **argv)
 				clar_usage(argv[0]);
 
 			_clar.output_format = CL_OUTPUT_TAP;
+			break;
+
+		case 'b':
+			if (argument[2] != '\0')
+				clar_usage(argv[0]);
+
+			_clar.test_mode = CL_TEST_BENCHMARK;
+			_clar.output_format = CL_OUTPUT_TIMING;
+			_clar.summary_format = CL_SUMMARY_JSON;
 			break;
 
 		case 'l': {
