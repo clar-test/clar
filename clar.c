@@ -214,6 +214,7 @@ struct clar_func {
 struct clar_suite {
 	const char *name;
 	struct clar_func initialize;
+	struct clar_func reset;
 	struct clar_func cleanup;
 	const struct clar_func *tests;
 	size_t test_count;
@@ -340,6 +341,7 @@ clar_run_test(
 	const struct clar_suite *suite,
 	const struct clar_func *test,
 	const struct clar_func *initialize,
+	const struct clar_func *reset,
 	const struct clar_func *cleanup)
 {
 	int runs = test->runs, i = 0;
@@ -364,6 +366,17 @@ clar_run_test(
 		do {
 			struct clar_counter start, end;
 			double elapsed;
+
+			if (i > 0 && reset->ptr != NULL) {
+				reset->ptr();
+			} else if (i > 0) {
+				if (_clar.local_cleanup != NULL)
+					_clar.local_cleanup(_clar.local_cleanup_payload);
+				if (cleanup->ptr != NULL)
+					cleanup->ptr();
+				if (initialize->ptr != NULL)
+					initialize->ptr();
+			}
 
 			clar_counter_now(&start);
 			test->ptr();
@@ -488,7 +501,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 
 		_clar.last_report = report;
 
-		clar_run_test(suite, &test[i], &suite->initialize, &suite->cleanup);
+		clar_run_test(suite, &test[i], &suite->initialize, &suite->reset, &suite->cleanup);
 
 		if (_clar.exit_on_error && _clar.total_errors)
 			return;
