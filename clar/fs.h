@@ -8,12 +8,6 @@
 
 #ifdef _WIN32
 
-#ifdef CLAR_WIN32_LONGPATHS
-# define CLAR_MAX_PATH 4096
-#else
-# define CLAR_MAX_PATH MAX_PATH
-#endif
-
 #define RM_RETRY_COUNT	5
 #define RM_RETRY_DELAY	10
 
