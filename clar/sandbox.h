@@ -233,11 +233,11 @@ static int clar_sandbox_cleanup(void)
 {
 	cl_assert(_clar_sandbox[0] != '\0');
 
-	fs_rm(_clar_sandbox);
-	_clar_sandbox[0] = '\0';
-
 	if (chdir(_clar_tempdir) != 0)
 		return -1;
+
+	fs_rm(_clar_sandbox);
+	_clar_sandbox[0] = '\0';
 
 	return 0;
 }
