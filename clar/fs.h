@@ -290,7 +290,7 @@ void
 cl_fs_cleanup(void)
 {
 #ifdef CLAR_FIXTURE_PATH
-	fs_rm(fixture_path(_clar_path, "*"));
+	fs_rm(fixture_path(clar_tempdir_path(), "*"));
 #else
 	((void)fs_copy); /* unused */
 #endif
@@ -512,7 +512,7 @@ fs_rm(const char *path)
 void
 cl_fs_cleanup(void)
 {
-	clar_unsandbox();
-	clar_sandbox();
+	clar_tempdir_shutdown();
+	clar_tempdir_init();
 }
 #endif

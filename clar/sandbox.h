@@ -2,7 +2,17 @@
 #include <sys/syslimits.h>
 #endif
 
-static char _clar_path[CLAR_MAX_PATH];
+/*
+ * The tempdir is the temporary directory for the entirety of the clar
+ * process execution. The sandbox is an individual temporary directory
+ * for the execution of an individual test. Sandboxes are deleted
+ * entirely after test execution to avoid pollution across tests.
+ */
+
+static char _clar_tempdir[CLAR_MAX_PATH];
+static size_t _clar_tempdir_len;
+
+static char _clar_sandbox[CLAR_MAX_PATH];
 
 static int
 is_valid_tmp_path(const char *path)
@@ -108,17 +118,17 @@ static int canonicalize_tmp_path(char *buffer)
 #endif
 }
 
-static void clar_unsandbox(void)
+static void clar_tempdir_shutdown(void)
 {
-	if (_clar_path[0] == '\0')
+	if (_clar_tempdir[0] == '\0')
 		return;
 
 	cl_must_pass(chdir(".."));
 
-	fs_rm(_clar_path);
+	fs_rm(_clar_tempdir);
 }
 
-static int build_sandbox_path(void)
+static int build_tempdir_path(void)
 {
 #ifdef CLAR_TMPDIR
 	const char path_tail[] = CLAR_TMPDIR "_XXXXXX";
@@ -128,57 +138,116 @@ static int build_sandbox_path(void)
 
 	size_t len;
 
-	if (find_tmp_path(_clar_path, sizeof(_clar_path)) < 0 ||
-	    canonicalize_tmp_path(_clar_path) < 0)
+	if (find_tmp_path(_clar_tempdir, sizeof(_clar_tempdir)) < 0 ||
+	    canonicalize_tmp_path(_clar_tempdir) < 0)
 		return -1;
 
-	len = strlen(_clar_path);
+	len = strlen(_clar_tempdir);
 
 	if (len + strlen(path_tail) + 2 > CLAR_MAX_PATH)
 		return -1;
 
-	if (_clar_path[len - 1] != '/')
-		_clar_path[len++] = '/';
+	if (_clar_tempdir[len - 1] != '/')
+		_clar_tempdir[len++] = '/';
 
-	strncpy(_clar_path + len, path_tail, sizeof(_clar_path) - len);
+	strncpy(_clar_tempdir + len, path_tail, sizeof(_clar_tempdir) - len);
 
 #if defined(__MINGW32__)
-	if (_mktemp(_clar_path) == NULL)
+	if (_mktemp(_clar_tempdir) == NULL)
 		return -1;
 
-	if (mkdir(_clar_path, 0700) != 0)
+	if (mkdir(_clar_tempdir, 0700) != 0)
 		return -1;
 #elif defined(_WIN32)
-	if (_mktemp_s(_clar_path, sizeof(_clar_path)) != 0)
+	if (_mktemp_s(_clar_tempdir, sizeof(_clar_tempdir)) != 0)
 		return -1;
 
-	if (mkdir(_clar_path, 0700) != 0)
+	if (mkdir(_clar_tempdir, 0700) != 0)
 		return -1;
 #elif defined(__sun) || defined(__TANDEM)
-	if (mktemp(_clar_path) == NULL)
+	if (mktemp(_clar_tempdir) == NULL)
 		return -1;
 
-	if (mkdir(_clar_path, 0700) != 0)
+	if (mkdir(_clar_tempdir, 0700) != 0)
 		return -1;
 #else
-	if (mkdtemp(_clar_path) == NULL)
+	if (mkdtemp(_clar_tempdir) == NULL)
 		return -1;
 #endif
+
+	_clar_tempdir_len = strlen(_clar_tempdir);
+	return 0;
+}
+
+static void clar_tempdir_init(void)
+{
+	if (_clar_tempdir[0] == '\0' && build_tempdir_path() < 0)
+		clar_abort("Failed to build tempdir path.\n");
+
+	if (chdir(_clar_tempdir) != 0)
+		clar_abort("Failed to change into tempdir '%s': %s.\n",
+			   _clar_tempdir, strerror(errno));
+}
+
+static void append(char *dst, const char *src)
+{
+	char *d;
+	const char *s;
+
+	for (d = dst; *d; d++)
+		;
+
+	for (s = src; *s; d++, s++)
+		if (*s == ':')
+			*d = '_';
+		else
+			*d = *s;
+
+	*d = '\0';
+}
+
+static int clar_sandbox_create(const char *suite_name, const char *test_name)
+{
+	cl_assert(_clar_sandbox[0] == '\0');
+
+	cl_assert(strlen(_clar_tempdir) + strlen(suite_name) + strlen(test_name) + 2 < CLAR_MAX_PATH);
+
+	strcpy(_clar_sandbox, _clar_tempdir);
+	_clar_sandbox[_clar_tempdir_len] = '/';
+	_clar_sandbox[_clar_tempdir_len + 1] = '\0';
+
+	append(_clar_sandbox, suite_name);
+	append(_clar_sandbox, "__");
+	append(_clar_sandbox, test_name);
+
+	if (mkdir(_clar_sandbox, 0700) != 0)
+		return -1;
+
+	if (chdir(_clar_sandbox) != 0)
+		return -1;
 
 	return 0;
 }
 
-static void clar_sandbox(void)
+static int clar_sandbox_cleanup(void)
 {
-	if (_clar_path[0] == '\0' && build_sandbox_path() < 0)
-		clar_abort("Failed to build sandbox path.\n");
+	cl_assert(_clar_sandbox[0] != '\0');
 
-	if (chdir(_clar_path) != 0)
-		clar_abort("Failed to change into sandbox directory '%s': %s.\n",
-			   _clar_path, strerror(errno));
+	fs_rm(_clar_sandbox);
+	_clar_sandbox[0] = '\0';
+
+	if (chdir(_clar_tempdir) != 0)
+		return -1;
+
+	return 0;
+}
+
+const char *clar_tempdir_path(void)
+{
+	return _clar_tempdir;
 }
 
 const char *clar_sandbox_path(void)
 {
-	return _clar_path;
+	return _clar_sandbox;
 }
