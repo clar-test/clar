@@ -94,6 +94,20 @@ const char *cl_fixture_basename(const char *fixture_name);
 #endif
 
 /**
+ * Invoke a helper function, which itself will use `cl_assert`
+ * constructs. This will preserve the stack information of the
+ * current call point, so that function name and line number
+ * information is shown from the line of the test, instead of
+ * the helper function.
+ */
+#define cl_invoke(expr) \
+	do { \
+		clar__set_invokepoint(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE); \
+		expr; \
+		clar__clear_invokepoint(); \
+	} while(0)
+
+/**
  * Assertion macros with explicit error message
  */
 #define cl_must_pass_(expr, desc) clar__assert((expr) >= 0, CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, "Function call failed: " #expr, desc, 1)
@@ -179,5 +193,12 @@ void clar__assert_equal(
 	int should_abort,
 	const char *fmt,
 	...);
+
+void clar__set_invokepoint(
+	const char *file,
+	const char *func,
+	size_t line);
+
+void clar__clear_invokepoint(void);
 
 #endif
