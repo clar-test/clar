@@ -8,6 +8,15 @@
 #define __CLAR_TEST_H__
 
 #include <stdlib.h>
+#include <limits.h>
+
+#if defined(_WIN32) && defined(CLAR_WIN32_LONGPATHS)
+# define CLAR_MAX_PATH 4096
+#elif defined(_WIN32)
+# define CLAR_MAX_PATH MAX_PATH
+#else
+# define CLAR_MAX_PATH PATH_MAX
+#endif
 
 #ifndef CLAR_SELFTEST
 # define CLAR_CURRENT_FILE __FILE__
@@ -40,6 +49,7 @@ void clar_test_shutdown(void);
 int clar_test(int argc, char *argv[]);
 
 const char *clar_sandbox_path(void);
+const char *clar_tempdir_path(void);
 
 void cl_set_cleanup(void (*cleanup)(void *), void *opaque);
 void cl_fs_cleanup(void);

@@ -26,6 +26,7 @@ jobs:
             generator: MSYS Makefiles
           - os: windows-latest
             generator: MinGW Makefiles
+      fail-fast: false
 
     runs-on: ${{ matrix.platform.os }}
 

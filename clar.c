@@ -203,8 +203,10 @@ static void clar_print_onabortv(const char *msg, va_list argp);
 static void clar_print_onabort(const char *msg, ...);
 
 /* From clar_sandbox.c */
-static void clar_unsandbox(void);
-static void clar_sandbox(void);
+static void clar_tempdir_init(void);
+static void clar_tempdir_shutdown(void);
+static int clar_sandbox_create(const char *suite_name, const char *test_name);
+static int clar_sandbox_cleanup(void);
 
 /* From summary.h */
 static struct clar_summary *clar_summary_init(const char *filename);
@@ -308,6 +310,8 @@ clar_run_test(
 
 	CL_TRACE(CL_TRACE__TEST__BEGIN);
 
+	clar_sandbox_create(suite->name, test->name);
+
 	_clar.last_report->start = time(NULL);
 	clar_time_now(&start);
 
@@ -336,6 +340,8 @@ clar_run_test(
 
 	if (cleanup->ptr != NULL)
 		cleanup->ptr();
+
+	clar_sandbox_cleanup();
 
 	CL_TRACE(CL_TRACE__TEST__END);
 
@@ -610,7 +616,7 @@ clar_test_init(int argc, char **argv)
 	if (_clar.write_summary)
 	    _clar.summary = clar_summary_init(_clar.summary_filename);
 
-	clar_sandbox();
+	clar_tempdir_init();
 }
 
 int
@@ -642,7 +648,7 @@ clar_test_shutdown(void)
 		_clar.total_errors
 	);
 
-	clar_unsandbox();
+	clar_tempdir_shutdown();
 
 	if (_clar.write_summary && clar_summary_shutdown(_clar.summary) < 0)
 		clar_abort("Failed to write the summary file '%s: %s.\n",
