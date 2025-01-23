@@ -187,6 +187,12 @@ static void clar_tempdir_init(void)
 	if (chdir(_clar_tempdir) != 0)
 		clar_abort("Failed to change into tempdir '%s': %s.\n",
 			   _clar_tempdir, strerror(errno));
+
+#if !defined(CLAR_SANDBOX_TEST_NAMES) && defined(_WIN32)
+	srand(clock() ^ (unsigned int)time(NULL) ^ GetCurrentProcessId() ^ GetCurrentThreadId());
+#elif !defined(CLAR_SANDBOX_TEST_NAMES)
+	srand(clock() ^ time(NULL) ^ (getpid() << 16));
+#endif
 }
 
 static void append(char *dst, const char *src)
@@ -208,9 +214,20 @@ static void append(char *dst, const char *src)
 
 static int clar_sandbox_create(const char *suite_name, const char *test_name)
 {
+#ifndef CLAR_SANDBOX_TEST_NAMES
+	char alpha[] = "0123456789abcdef";
+	int num = rand();
+#endif
+
 	cl_assert(_clar_sandbox[0] == '\0');
 
-	cl_assert(strlen(_clar_tempdir) + strlen(suite_name) + strlen(test_name) + 2 < CLAR_MAX_PATH);
+	/*
+	 * We may want to use test names as sandbox directory names for
+	 * readability, _however_ on platforms with restrictions for short
+	 * file / folder names (eg, Windows), this may be too long.
+	 */
+#ifdef CLAR_SANDBOX_TEST_NAMES
+	cl_assert(strlen(_clar_tempdir) + strlen(suite_name) + strlen(test_name) + 3 < CLAR_MAX_PATH);
 
 	strcpy(_clar_sandbox, _clar_tempdir);
 	_clar_sandbox[_clar_tempdir_len] = '/';
@@ -219,6 +236,26 @@ static int clar_sandbox_create(const char *suite_name, const char *test_name)
 	append(_clar_sandbox, suite_name);
 	append(_clar_sandbox, "__");
 	append(_clar_sandbox, test_name);
+#else
+	((void)suite_name);
+	((void)test_name);
+	((void)append);
+
+	cl_assert(strlen(_clar_tempdir) + 9 < CLAR_MAX_PATH);
+
+	strcpy(_clar_sandbox, _clar_tempdir);
+	_clar_sandbox[_clar_tempdir_len] = '/';
+
+	_clar_sandbox[_clar_tempdir_len + 1] = alpha[(num & 0xf0000000) >> 28];
+	_clar_sandbox[_clar_tempdir_len + 2] = alpha[(num & 0x0f000000) >> 24];
+	_clar_sandbox[_clar_tempdir_len + 3] = alpha[(num & 0x00f00000) >> 20];
+	_clar_sandbox[_clar_tempdir_len + 4] = alpha[(num & 0x000f0000) >> 16];
+	_clar_sandbox[_clar_tempdir_len + 5] = alpha[(num & 0x0000f000) >> 12];
+	_clar_sandbox[_clar_tempdir_len + 6] = alpha[(num & 0x00000f00) >> 8];
+	_clar_sandbox[_clar_tempdir_len + 7] = alpha[(num & 0x000000f0) >> 4];
+	_clar_sandbox[_clar_tempdir_len + 8] = alpha[(num & 0x0000000f) >> 0];
+	_clar_sandbox[_clar_tempdir_len + 9] = '\0';
+#endif
 
 	if (mkdir(_clar_sandbox, 0700) != 0)
 		return -1;
