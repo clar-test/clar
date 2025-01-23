@@ -1,8 +1,15 @@
+include(CheckFunctionExists)
+
 cmake_minimum_required(VERSION 3.16..3.29)
 
 project(clar LANGUAGES C)
 
 option(BUILD_EXAMPLE "Build the example." ON)
+
+check_function_exists(realpath CLAR_HAS_REALPATH)
+if(CLAR_HAS_REALPATH)
+	add_compile_definitions(-DCLAR_HAS_REALPATH)
+endif()
 
 add_library(clar INTERFACE)
 target_sources(clar INTERFACE

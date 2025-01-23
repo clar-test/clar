@@ -104,7 +104,7 @@ static int canonicalize_tmp_path(char *buffer)
 			*p = '/';
 
 	return 0;
-#elif defined(__APPLE__) || defined(HAS_REALPATH)
+#elif defined(CLAR_HAS_REALPATH)
 	char tmp[CLAR_MAX_PATH];
 
 	if (realpath(buffer, tmp) == NULL)
