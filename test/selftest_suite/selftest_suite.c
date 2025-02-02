@@ -78,3 +78,8 @@ void test_selftest_suite__ptr(void)
 	cl_assert_equal_p(p1, p1); /* pointers to same object */
 	cl_assert_equal_p(p1, p2);
 }
+
+void test_selftest_suite__multiline_description(void)
+{
+	cl_must_pass_(-1, "description line 1\ndescription line 2");
+}

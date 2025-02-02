@@ -38,6 +38,12 @@ selftest::suite::ptr [file:42]
   Pointer mismatch: p1 != p2
   0x1 != 0x2
 
+  1) Failure:
+selftest::suite::multiline_description [file:42]
+  Function call failed: -1
+  description line 1
+  description line 2
+
 
 
   1) Failure:
@@ -77,4 +83,10 @@ selftest::suite::bool [file:42]
 selftest::suite::ptr [file:42]
   Pointer mismatch: p1 != p2
   0x1 != 0x2
+
+  9) Failure:
+selftest::suite::multiline_description [file:42]
+  Function call failed: -1
+  description line 1
+  description line 2
 

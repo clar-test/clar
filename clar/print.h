@@ -17,6 +17,22 @@ static void clar_print_clap_shutdown(int test_count, int suite_count, int error_
 	clar_report_all();
 }
 
+
+static void clar_print_indented(const char *str, int indent)
+{
+	const char *bol, *eol;
+
+	for (bol = str; *bol; bol = eol) {
+		eol = strchr(bol, '\n');
+		if (eol)
+			eol++;
+		else
+			eol = bol + strlen(bol);
+		printf("%*s%.*s", indent, "", (int)(eol - bol), bol);
+	}
+	putc('\n', stdout);
+}
+
 static void clar_print_clap_error(int num, const struct clar_report *report, const struct clar_error *error)
 {
 	printf("  %d) Failure:\n", num);
@@ -27,10 +43,10 @@ static void clar_print_clap_error(int num, const struct clar_report *report, con
 		error->file,
 		error->line_number);
 
-	printf("  %s\n", error->error_msg);
+	clar_print_indented(error->error_msg, 2);
 
 	if (error->description != NULL)
-		printf("  %s\n", error->description);
+		clar_print_indented(error->description, 2);
 
 	printf("\n");
 	fflush(stdout);
@@ -129,10 +145,10 @@ static void clar_print_tap_ontest(const char *suite_name, const char *test_name,
 
 		printf("    ---\n");
 		printf("    reason: |\n");
-		printf("      %s\n", error->error_msg);
+		clar_print_indented(error->error_msg, 6);
 
 		if (error->description)
-			printf("      %s\n", error->description);
+			clar_print_indented(error->description, 6);
 
 		printf("    at:\n");
 		printf("      file: '"); print_escaped(error->file); printf("'\n");
