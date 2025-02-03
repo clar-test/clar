@@ -32,5 +32,14 @@
 			<failure type="assert"><![CDATA[Pointer mismatch: p1 != p2
 0x1 != 0x2]]></failure>
 		</testcase>
+		<testcase name="multiline_description" classname="selftest" time="0.00">
+			<failure type="assert"><![CDATA[Function call failed: −1
+description line 1
+description line 2]]></failure>
+		</testcase>
+		<testcase name="null_string" classname="selftest" time="0.00">
+			<failure type="assert"><![CDATA[String mismatch: "expected" != actual ("this one fails")
+'expected' != NULL]]></failure>
+		</testcase>
 	</testsuite>
 </testsuites>

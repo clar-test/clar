@@ -787,7 +787,12 @@ void clar__assert_equal(
 				p_snprintf(buf, sizeof(buf), "'%s' != '%s' (at byte %d)",
 					s1, s2, pos);
 			} else {
-				p_snprintf(buf, sizeof(buf), "'%s' != '%s'", s1, s2);
+				const char *q1 = s1 ? "'" : "";
+				const char *q2 = s2 ? "'" : "";
+				s1 = s1 ? s1 : "NULL";
+				s2 = s2 ? s2 : "NULL";
+				p_snprintf(buf, sizeof(buf), "%s%s%s != %s%s%s",
+					   q1, s1, q1, q2, s2, q2);
 			}
 		}
 	}
@@ -805,7 +810,12 @@ void clar__assert_equal(
 				p_snprintf(buf, sizeof(buf), "'%.*s' != '%.*s' (at byte %d)",
 					len, s1, len, s2, pos);
 			} else {
-				p_snprintf(buf, sizeof(buf), "'%.*s' != '%.*s'", len, s1, len, s2);
+				const char *q1 = s1 ? "'" : "";
+				const char *q2 = s2 ? "'" : "";
+				s1 = s1 ? s1 : "NULL";
+				s2 = s2 ? s2 : "NULL";
+				p_snprintf(buf, sizeof(buf), "%s%.*s%s != %s%.*s%s",
+					   q1, len, s1, q1, q2, len, s2, q2);
 			}
 		}
 	}
@@ -823,7 +833,12 @@ void clar__assert_equal(
 				p_snprintf(buf, sizeof(buf), "'%ls' != '%ls' (at byte %d)",
 					wcs1, wcs2, pos);
 			} else {
-				p_snprintf(buf, sizeof(buf), "'%ls' != '%ls'", wcs1, wcs2);
+				const char *q1 = wcs1 ? "'" : "";
+				const char *q2 = wcs2 ? "'" : "";
+				wcs1 = wcs1 ? wcs1 : L"NULL";
+				wcs2 = wcs2 ? wcs2 : L"NULL";
+				p_snprintf(buf, sizeof(buf), "%s%ls%s != %s%ls%s",
+					   q1, wcs1, q1, q2, wcs2, q2);
 			}
 		}
 	}
@@ -841,7 +856,12 @@ void clar__assert_equal(
 				p_snprintf(buf, sizeof(buf), "'%.*ls' != '%.*ls' (at byte %d)",
 					len, wcs1, len, wcs2, pos);
 			} else {
-				p_snprintf(buf, sizeof(buf), "'%.*ls' != '%.*ls'", len, wcs1, len, wcs2);
+				const char *q1 = wcs1 ? "'" : "";
+				const char *q2 = wcs2 ? "'" : "";
+				wcs1 = wcs1 ? wcs1 : L"NULL";
+				wcs2 = wcs2 ? wcs2 : L"NULL";
+				p_snprintf(buf, sizeof(buf), "%s%.*ls%s != %s%.*ls%s",
+					   q1, len, wcs1, q1, q2, len, wcs2, q2);
 			}
 		}
 	}
