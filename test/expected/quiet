@@ -44,6 +44,11 @@ selftest::suite::multiline_description [file:42]
   description line 1
   description line 2
 
+  1) Failure:
+selftest::suite::null_string [file:42]
+  String mismatch: "expected" != actual ("this one fails")
+  'expected' != NULL
+
 
 
   1) Failure:
@@ -89,4 +94,9 @@ selftest::suite::multiline_description [file:42]
   Function call failed: -1
   description line 1
   description line 2
+
+  10) Failure:
+selftest::suite::null_string [file:42]
+  String mismatch: "expected" != actual ("this one fails")
+  'expected' != NULL
 

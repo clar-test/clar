@@ -1,6 +1,6 @@
 Loaded 1 suites: 
 Started (test status codes: OK='.' FAILURE='F' SKIPPED='S')
-FFFFFFFFF
+FFFFFFFFFF
 
   1) Failure:
 selftest::suite::1 [file:42]
@@ -45,4 +45,9 @@ selftest::suite::multiline_description [file:42]
   Function call failed: -1
   description line 1
   description line 2
+
+  10) Failure:
+selftest::suite::null_string [file:42]
+  String mismatch: "expected" != actual ("this one fails")
+  'expected' != NULL
 

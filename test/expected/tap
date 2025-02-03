@@ -89,4 +89,14 @@ not ok 9 - selftest::suite::multiline_description
       line: 42
       function: 'func'
     ---
-1..9
+not ok 10 - selftest::suite::null_string
+    ---
+    reason: |
+      String mismatch: "expected" != actual ("this one fails")
+      'expected' != NULL
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ---
+1..10
