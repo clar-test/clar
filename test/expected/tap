@@ -78,4 +78,25 @@ not ok 8 - selftest::suite::ptr
       line: 42
       function: 'func'
     ---
-1..8
+not ok 9 - selftest::suite::multiline_description
+    ---
+    reason: |
+      Function call failed: -1
+      description line 1
+      description line 2
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ---
+not ok 10 - selftest::suite::null_string
+    ---
+    reason: |
+      String mismatch: "expected" != actual ("this one fails")
+      'expected' != NULL
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ---
+1..10
