@@ -76,8 +76,10 @@
 #			define S_ISDIR(x) ((x & _S_IFDIR) != 0)
 #		endif
 #		define p_snprintf(buf,sz,fmt,...) _snprintf_s(buf,sz,_TRUNCATE,fmt,__VA_ARGS__)
+#		define p_vsnprintf _vsnprintf
 #	else
 #		define p_snprintf snprintf
+#		define p_vsnprintf vsnprintf
 #	endif
 
 #	define localtime_r(timer, buf) (localtime_s(buf, timer) == 0 ? buf : NULL)
@@ -86,6 +88,7 @@
 #	include <unistd.h>
 #	define _MAIN_CC
 #	define p_snprintf snprintf
+#	define p_vsnprintf vsnprintf
 	typedef struct stat STAT_T;
 #endif
 
