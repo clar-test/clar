@@ -109,4 +109,24 @@ not ok 11 - selftest::suite::failf
       line: 42
       function: 'func'
     ---
-1..11
+not ok 12 - selftest::suite::compare_i
+    ---
+    reason: |
+      Expected comparison to hold: 2 < 1
+      2 >= 1
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ---
+not ok 13 - selftest::suite::compare_u
+    ---
+    reason: |
+      Expected comparison to hold: 2 < 1
+      2 >= 1
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ---
+1..13
