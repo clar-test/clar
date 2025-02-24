@@ -99,4 +99,14 @@ not ok 10 - selftest::suite::null_string
       line: 42
       function: 'func'
     ---
-1..10
+not ok 11 - selftest::suite::failf
+    ---
+    reason: |
+      Test failed.
+      some reason: foo
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ---
+1..11

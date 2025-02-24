@@ -47,3 +47,8 @@ selftest::suite::null_string [file:42]
   String mismatch: "expected" != actual ("this one fails")
   'expected' != NULL
 
+  11) Failure:
+selftest::suite::failf [file:42]
+  Test failed.
+  some reason: foo
+

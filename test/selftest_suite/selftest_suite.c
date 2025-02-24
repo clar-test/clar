@@ -90,3 +90,8 @@ void test_selftest_suite__null_string(void)
 	cl_assert_equal_s(actual, actual);
 	cl_assert_equal_s_("expected", actual, "this one fails");
 }
+
+void test_selftest_suite__failf(void)
+{
+	cl_failf("some reason: %s", "foo");
+}
