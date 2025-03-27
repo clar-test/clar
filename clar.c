@@ -350,11 +350,8 @@ clar_run_test(
 	_clar.local_cleanup = NULL;
 	_clar.local_cleanup_payload = NULL;
 
-	if (_clar.verbosity < 0) {
-		clar_report_errors(_clar.last_report);
-	} else {
+	if (_clar.verbosity >= 0)
 		clar_print_ontest(suite->name, test->name, _clar.tests_ran, _clar.last_report->status);
-	}
 }
 
 static void
