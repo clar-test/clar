@@ -150,7 +150,6 @@ static struct {
 
 	enum cl_output_format output_format;
 
-	int report_errors_only;
 	int exit_on_error;
 	int verbosity;
 
@@ -351,7 +350,7 @@ clar_run_test(
 	_clar.local_cleanup = NULL;
 	_clar.local_cleanup_payload = NULL;
 
-	if (_clar.report_errors_only) {
+	if (_clar.verbosity < 0) {
 		clar_report_errors(_clar.last_report);
 	} else {
 		clar_print_ontest(suite->name, test->name, _clar.tests_ran, _clar.last_report->status);
@@ -372,7 +371,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 	if (_clar.exit_on_error && _clar.total_errors)
 		return;
 
-	if (!_clar.report_errors_only)
+	if (_clar.verbosity >= 0)
 		clar_print_onsuite(suite->name, ++_clar.suites_ran);
 
 	_clar.active_suite = suite->name;
@@ -440,7 +439,7 @@ clar_usage(const char *arg)
 	printf("  -iname        Include the suite with `name`\n");
 	printf("  -xname        Exclude the suite with `name`\n");
 	printf("  -v            Increase verbosity (show suite names)\n");
-	printf("  -q            Only report tests that had an error\n");
+	printf("  -q            Decrease verbosity, inverse to -v\n");
 	printf("  -Q            Quit as soon as a test fails\n");
 	printf("  -t            Display results in tap format\n");
 	printf("  -l            Print suite names\n");
@@ -532,7 +531,7 @@ clar_parse_args(int argc, char **argv)
 			if (argument[2] != '\0')
 				clar_usage(argv[0]);
 
-			_clar.report_errors_only = 1;
+			_clar.verbosity--;
 			break;
 
 		case 'Q':
