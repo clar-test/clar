@@ -138,9 +138,6 @@ static void clar_print_tap_ontest(const char *suite_name, const char *test_name,
 {
 	const struct clar_error *error = _clar.last_report->errors;
 
-	if (_clar.verbosity < 0)
-		return;
-
 	(void)test_name;
 	(void)test_number;
 
@@ -151,18 +148,20 @@ static void clar_print_tap_ontest(const char *suite_name, const char *test_name,
 	case CL_TEST_FAILURE:
 		printf("not ok %d - %s::%s\n", test_number, suite_name, test_name);
 
-		printf("    ---\n");
-		printf("    reason: |\n");
-		clar_print_indented(error->error_msg, 6);
+		if (_clar.verbosity >= 0) {
+			printf("    ---\n");
+			printf("    reason: |\n");
+			clar_print_indented(error->error_msg, 6);
 
-		if (error->description)
-			clar_print_indented(error->description, 6);
+			if (error->description)
+				clar_print_indented(error->description, 6);
 
-		printf("    at:\n");
-		printf("      file: '"); print_escaped(error->file); printf("'\n");
-		printf("      line: %" PRIuMAX "\n", error->line_number);
-		printf("      function: '%s'\n", error->function);
-		printf("    ---\n");
+			printf("    at:\n");
+			printf("      file: '"); print_escaped(error->file); printf("'\n");
+			printf("      line: %" PRIuMAX "\n", error->line_number);
+			printf("      function: '%s'\n", error->function);
+			printf("    ---\n");
+		}
 
 		break;
 	case CL_TEST_SKIP:
