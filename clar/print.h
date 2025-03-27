@@ -3,6 +3,10 @@
 static void clar_print_clap_init(int test_count, int suite_count, const char *suite_names)
 {
 	(void)test_count;
+
+	if (_clar.verbosity < 0)
+		return;
+
 	printf("Loaded %d suites: %s\n", (int)suite_count, suite_names);
 	printf("Started (test status codes: OK='.' FAILURE='F' SKIPPED='S')\n");
 }
@@ -13,7 +17,8 @@ static void clar_print_clap_shutdown(int test_count, int suite_count, int error_
 	(void)suite_count;
 	(void)error_count;
 
-	printf("\n\n");
+	if (_clar.verbosity >= 0)
+		printf("\n\n");
 	clar_report_all();
 }
 
