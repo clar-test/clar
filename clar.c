@@ -350,8 +350,7 @@ clar_run_test(
 	_clar.local_cleanup = NULL;
 	_clar.local_cleanup_payload = NULL;
 
-	if (_clar.verbosity >= 0)
-		clar_print_ontest(suite->name, test->name, _clar.tests_ran, _clar.last_report->status);
+	clar_print_ontest(suite->name, test->name, _clar.tests_ran, _clar.last_report->status);
 }
 
 static void
@@ -368,8 +367,7 @@ clar_run_suite(const struct clar_suite *suite, const char *filter)
 	if (_clar.exit_on_error && _clar.total_errors)
 		return;
 
-	if (_clar.verbosity >= 0)
-		clar_print_onsuite(suite->name, ++_clar.suites_ran);
+	clar_print_onsuite(suite->name, ++_clar.suites_ran);
 
 	_clar.active_suite = suite->name;
 	_clar.active_test = NULL;

@@ -57,6 +57,9 @@ static void clar_print_clap_ontest(const char *suite_name, const char *test_name
 	(void)test_name;
 	(void)test_number;
 
+	if (_clar.verbosity < 0)
+		return;
+
 	if (_clar.verbosity > 1) {
 		printf("%s::%s: ", suite_name, test_name);
 
@@ -80,6 +83,8 @@ static void clar_print_clap_ontest(const char *suite_name, const char *test_name
 
 static void clar_print_clap_onsuite(const char *suite_name, int suite_index)
 {
+	if (_clar.verbosity < 0)
+		return;
 	if (_clar.verbosity == 1)
 		printf("\n%s", suite_name);
 
@@ -133,6 +138,9 @@ static void clar_print_tap_ontest(const char *suite_name, const char *test_name,
 {
 	const struct clar_error *error = _clar.last_report->errors;
 
+	if (_clar.verbosity < 0)
+		return;
+
 	(void)test_name;
 	(void)test_number;
 
@@ -168,6 +176,8 @@ static void clar_print_tap_ontest(const char *suite_name, const char *test_name,
 
 static void clar_print_tap_onsuite(const char *suite_name, int suite_index)
 {
+	if (_clar.verbosity < 0)
+		return;
 	printf("# start of suite %d: %s\n", suite_index, suite_name);
 }
 
