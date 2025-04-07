@@ -79,6 +79,8 @@
 #	else
 #		define p_snprintf snprintf
 #	endif
+
+#	define localtime_r(timer, buf) (localtime_s(buf, timer) == 0 ? buf : NULL)
 #else
 #	include <sys/wait.h> /* waitpid(2) */
 #	include <unistd.h>
@@ -805,7 +807,7 @@ void clar__assert_equal(
 		if (!is_equal) {
 			if (s1 && s2) {
 				int pos;
-				for (pos = 0; s1[pos] == s2[pos] && pos < len; ++pos)
+				for (pos = 0; pos < len && s1[pos] == s2[pos]; ++pos)
 					/* find differing byte offset */;
 				p_snprintf(buf, sizeof(buf), "'%.*s' != '%.*s' (at byte %d)",
 					len, s1, len, s2, pos);
@@ -851,7 +853,7 @@ void clar__assert_equal(
 		if (!is_equal) {
 			if (wcs1 && wcs2) {
 				int pos;
-				for (pos = 0; wcs1[pos] == wcs2[pos] && pos < len; ++pos)
+				for (pos = 0; pos < len && wcs1[pos] == wcs2[pos]; ++pos)
 					/* find differing byte offset */;
 				p_snprintf(buf, sizeof(buf), "'%.*ls' != '%.*ls' (at byte %d)",
 					len, wcs1, len, wcs2, pos);
