@@ -5,7 +5,7 @@ Options:
   -iname        Include the suite with `name`
   -xname        Exclude the suite with `name`
   -v            Increase verbosity (show suite names)
-  -q            Only report tests that had an error
+  -q            Decrease verbosity, inverse to -v
   -Q            Quit as soon as a test fails
   -t            Display results in tap format
   -l            Print suite names
