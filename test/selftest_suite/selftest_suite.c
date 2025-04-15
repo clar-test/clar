@@ -90,3 +90,35 @@ void test_selftest_suite__null_string(void)
 	cl_assert_equal_s(actual, actual);
 	cl_assert_equal_s_("expected", actual, "this one fails");
 }
+
+void test_selftest_suite__failf(void)
+{
+	cl_failf("some reason: %s", "foo");
+}
+
+void test_selftest_suite__compare_i(void)
+{
+	cl_assert_equal_i(1, 1);
+	cl_assert_eq_i(1, 1);
+	cl_assert_lt_i(1, 2);
+	cl_assert_le_i(1, 2);
+	cl_assert_le_i(2, 2);
+	cl_assert_gt_i(2, 1);
+	cl_assert_ge_i(2, 2);
+	cl_assert_ge_i(3, 2);
+
+	cl_assert_lt_i(2, 1); /* this one fails */
+}
+
+void test_selftest_suite__compare_u(void)
+{
+	cl_assert_eq_u(1, 1);
+	cl_assert_lt_u(1, 2);
+	cl_assert_le_u(1, 2);
+	cl_assert_le_u(2, 2);
+	cl_assert_gt_u(2, 1);
+	cl_assert_ge_u(2, 2);
+	cl_assert_ge_u(3, 2);
+
+	cl_assert_lt_u(2, 1); /* this one fails */
+}
