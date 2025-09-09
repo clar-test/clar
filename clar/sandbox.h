@@ -164,7 +164,7 @@ static int build_tempdir_path(void)
 
 	if (mkdir(_clar_tempdir, 0700) != 0)
 		return -1;
-#elif defined(__sun) || defined(__TANDEM)
+#elif defined(__sun) || defined(__TANDEM) || defined(__hpux)
 	if (mktemp(_clar_tempdir) == NULL)
 		return -1;
 
