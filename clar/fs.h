@@ -470,11 +470,17 @@ static void
 fs_rmdir_helper(const char *path)
 {
 	DIR *dir;
-	struct dirent *d;
 
 	cl_assert_(dir = opendir(path), "Could not open dir");
-	while ((d = (errno = 0, readdir(dir))) != NULL) {
+
+	while (1) {
+		struct dirent *d;
 		char *child;
+
+		errno = 0;
+		d = readdir(dir);
+		if (!d)
+			break;
 
 		if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
 			continue;
