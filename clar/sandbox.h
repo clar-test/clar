@@ -191,7 +191,7 @@ static void clar_tempdir_init(void)
 #if !defined(CLAR_SANDBOX_TEST_NAMES) && defined(_WIN32)
 	srand(clock() ^ (unsigned int)time(NULL) ^ GetCurrentProcessId() ^ GetCurrentThreadId());
 #elif !defined(CLAR_SANDBOX_TEST_NAMES)
-	srand(clock() ^ time(NULL) ^ (getpid() << 16));
+	srand(clock() ^ time(NULL) ^ ((unsigned)getpid() << 16));
 #endif
 }
 
