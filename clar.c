@@ -195,7 +195,7 @@ struct clar_suite {
 };
 
 /* From clar_print_*.c */
-static void clar_print_init(int test_count, int suite_count, const char *suite_names);
+static void clar_print_init(int test_count, int suite_count);
 static void clar_print_shutdown(int test_count, int suite_count, int error_count);
 static void clar_print_error(int num, const struct clar_report *report, const struct clar_error *error);
 static void clar_print_ontest(const char *suite_name, const char *test_name, int test_number, enum cl_test_status failed);
@@ -592,11 +592,7 @@ clar_test_init(int argc, char **argv)
 	if (argc > 1)
 		clar_parse_args(argc, argv);
 
-	clar_print_init(
-		(int)_clar_callback_count,
-		(int)_clar_suite_count,
-		""
-	);
+	clar_print_init((int)_clar_callback_count, (int)_clar_suite_count);
 
 	if (!_clar.summary_filename &&
 	    (summary_env = getenv("CLAR_SUMMARY")) != NULL) {
