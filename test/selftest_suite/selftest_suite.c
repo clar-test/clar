@@ -74,9 +74,12 @@ void test_selftest_suite__bool(void)
 
 void test_selftest_suite__ptr(void)
 {
-	void *p1 = (void *)0x1, *p2 = (void *)0x2;
+	void *p1 = (void *)0x1;
 	cl_assert_equal_p(p1, p1); /* pointers to same object */
-	cl_assert_equal_p(p1, p2);
+	/*
+	 * Note that we do not test the failing case, as the output from "%p"
+	 * is platform dependent.
+	 */
 }
 
 void test_selftest_suite__multiline_description(void)
