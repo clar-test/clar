@@ -875,8 +875,8 @@ void clar__assert_equal(
 		void *p1 = va_arg(args, void *), *p2 = va_arg(args, void *);
 		is_equal = (p1 == p2);
 		if (!is_equal)
-			p_snprintf(buf, sizeof(buf), "0x%"PRIxPTR" != 0x%"PRIxPTR,
-				   (uintptr_t)p1, (uintptr_t)p2);
+			p_snprintf(buf, sizeof(buf), "0x%"PRIxMAX" != 0x%"PRIxMAX,
+				   (uintmax_t)p1, (uintmax_t)p2);
 	}
 	else {
 		int i1 = va_arg(args, int), i2 = va_arg(args, int);
