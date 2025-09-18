@@ -68,16 +68,7 @@ not ok 7 - selftest::suite::bool
       line: 42
       function: 'func'
     ---
-not ok 8 - selftest::suite::ptr
-    ---
-    reason: |
-      Pointer mismatch: p1 != p2
-      0x1 != 0x2
-    at:
-      file: 'file'
-      line: 42
-      function: 'func'
-    ---
+ok 8 - selftest::suite::ptr
 not ok 9 - selftest::suite::multiline_description
     ---
     reason: |
