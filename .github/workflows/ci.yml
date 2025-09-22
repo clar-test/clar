@@ -13,19 +13,27 @@ jobs:
         platform:
           - os: ubuntu-latest
             generator: Unix Makefiles
+            env:
+              CFLAGS: "-Werror -Wall -Wextra"
           - os: ubuntu-latest
             generator: Unix Makefiles
             env:
               CC: "clang"
-              CFLAGS: "-fsanitize=leak"
+              CFLAGS: "-Werror -Wall -Wextra -fsanitize=leak"
           - os: macos-latest
             generator: Unix Makefiles
+            env:
+              CFLAGS: "-Werror -Wall -Wextra"
           - os: windows-latest
             generator: Visual Studio 17 2022
           - os: windows-latest
             generator: MSYS Makefiles
+            env:
+              CFLAGS: "-Werror -Wall -Wextra"
           - os: windows-latest
             generator: MinGW Makefiles
+            env:
+              CFLAGS: "-Werror -Wall -Wextra"
       fail-fast: false
 
     runs-on: ${{ matrix.platform.os }}
