@@ -59,19 +59,17 @@ static char *read_file(const char *path)
 	return content;
 }
 
-static void run(const char *suite, const char *expected_output_file, int expected_error_code, ...)
+static char *execute(const char *suite, int expected_error_code, const char **args, size_t nargs)
 {
 	SECURITY_ATTRIBUTES security_attributes = { 0 };
 	PROCESS_INFORMATION process_info = { 0 };
 	STARTUPINFO startup_info = { 0 };
 	char binary_path[4096] = { 0 };
 	char cmdline[4096] = { 0 };
-	char *expected_output = NULL;
 	char *output = NULL;
 	HANDLE stdout_write;
 	HANDLE stdout_read;
 	DWORD exit_code;
-	va_list ap;
 	size_t i;
 
 	snprintf(binary_path, sizeof(binary_path), "%s/%s_suite.exe",
@@ -81,21 +79,14 @@ static void run(const char *suite, const char *expected_output_file, int expecte
 	 * Assemble command line arguments. In theory we'd have to properly
 	 * quote them. In practice none of our tests actually care.
 	 */
-	va_start(ap, expected_error_code);
 	snprintf(cmdline, sizeof(cmdline), suite);
-	while (1) {
+	for (i = 0; i < nargs; i++) {
 		size_t cmdline_len = strlen(cmdline);
-		const char *arg;
-
-		arg = va_arg(ap, const char *);
-		if (!arg)
-			break;
-
+		const char *arg = args[i];
 		cl_assert(cmdline_len + strlen(arg) < sizeof(cmdline));
 		snprintf(cmdline + cmdline_len, sizeof(cmdline) - cmdline_len,
 			 " %s", arg);
 	}
-	va_end(ap);
 
 	/*
 	 * Create a pipe that we will use to read data from the child process.
@@ -122,10 +113,32 @@ static void run(const char *suite, const char *expected_output_file, int expecte
 	output = read_full(stdout_read, 1);
 	cl_assert_equal_b(1, CloseHandle(stdout_read));
 	cl_assert_equal_b(1, GetExitCodeProcess(process_info.hProcess, &exit_code));
+	cl_assert_equal_i(exit_code, expected_error_code);
 
+	return output;
+}
+
+static void assert_output(const char *suite, const char *expected_output_file, int expected_error_code, ...)
+{
+	char *expected_output = NULL;
+	char *output = NULL;
+	const char *args[16];
+	va_list ap;
+	size_t i;
+
+	va_start(ap, expected_error_code);
+	for (i = 0; ; i++) {
+		const char *arg = va_arg(ap, const char *);
+		if (!arg)
+			break;
+		cl_assert(i < sizeof(args) / sizeof(*args));
+		args[i] = arg;
+	}
+	va_end(ap);
+
+	output = execute(suite, expected_error_code, args, i);
 	expected_output = read_file(cl_fixture(expected_output_file));
 	cl_assert_equal_s(output, expected_output);
-	cl_assert_equal_i(exit_code, expected_error_code);
 
 	free(expected_output);
 	free(output);
@@ -185,31 +198,24 @@ static char *read_file(const char *path)
 	return data;
 }
 
-static void run(const char *suite, const char *expected_output_file, int expected_error_code, ...)
+static char *execute(const char *suite, int expected_error_code, const char **args, size_t nargs)
 {
-	const char *argv[16];
 	int pipe_fds[2];
-	va_list ap;
 	pid_t pid;
-	int i;
-
-	va_start(ap, expected_error_code);
-	argv[0] = suite;
-	for (i = 1; ; i++) {
-		cl_assert(i < sizeof(argv) / sizeof(*argv));
-
-		argv[i] = va_arg(ap, const char *);
-		if (!argv[i])
-			break;
-	}
-	va_end(ap);
 
 	cl_must_pass(pipe(pipe_fds));
 
 	pid = fork();
 	if (!pid) {
+		const char *final_args[17] = { NULL };
 		char binary_path[4096];
 		size_t len = 0;
+		size_t i;
+
+		cl_assert(nargs < sizeof(final_args) / sizeof(*final_args));
+		final_args[0] = suite;
+		for (i = 0; i < nargs; i++)
+			final_args[i + 1] = args[i];
 
 		if (dup2(pipe_fds[1], STDOUT_FILENO) < 0 ||
 		    dup2(pipe_fds[1], STDERR_FILENO) < 0 ||
@@ -236,11 +242,11 @@ static void run(const char *suite, const char *expected_output_file, int expecte
 
 		binary_path[len] = '\0';
 
-		execv(binary_path, (char **) argv);
+		execv(binary_path, (char **) final_args);
 		exit(1);
 	} else if (pid > 0) {
 		pid_t waited_pid;
-		char *expected_output, *output;
+		char *output;
 		int stat;
 
 		cl_must_pass(close(pipe_fds[1]));
@@ -252,56 +258,78 @@ static void run(const char *suite, const char *expected_output_file, int expecte
 		cl_assert(WIFEXITED(stat));
 		cl_assert_equal_i(WEXITSTATUS(stat), expected_error_code);
 
-		expected_output = read_file(cl_fixture(expected_output_file));
-		cl_assert_equal_s(output, expected_output);
-
-		free(expected_output);
-		free(output);
+		return output;
 	} else {
 		cl_fail("Fork failed.");
 	}
+
+	return NULL;
+}
+
+static void assert_output(const char *suite, const char *expected_output_file, int expected_error_code, ...)
+{
+	char *expected_output, *output;
+	const char *args[16];
+	va_list ap;
+	int i;
+
+	va_start(ap, expected_error_code);
+	for (i = 0; ; i++) {
+		cl_assert(i < sizeof(args) / sizeof(*args));
+		args[i] = va_arg(ap, const char *);
+		if (!args[i])
+			break;
+	}
+	va_end(ap);
+
+	output = execute(suite, expected_error_code, args, i);
+	expected_output = read_file(cl_fixture(expected_output_file));
+	cl_assert_equal_s(output, expected_output);
+
+	free(expected_output);
+	free(output);
 }
 #endif
 
 void test_selftest__help(void)
 {
-	cl_invoke(run("combined", "help", 1, "-h", NULL));
+	cl_invoke(assert_output("combined", "help", 1, "-h", NULL));
 }
 
 void test_selftest__without_arguments(void)
 {
-	cl_invoke(run("combined", "without_arguments", 10, NULL));
+	cl_invoke(assert_output("combined", "without_arguments", 10, NULL));
 }
 
 void test_selftest__specific_test(void)
 {
-	cl_invoke(run("combined", "specific_test", 1, "-scombined::bool", NULL));
+	cl_invoke(assert_output("combined", "specific_test", 1, "-scombined::bool", NULL));
 }
 
 void test_selftest__stop_on_failure(void)
 {
-	cl_invoke(run("combined", "stop_on_failure", 1, "-Q", NULL));
+	cl_invoke(assert_output("combined", "stop_on_failure", 1, "-Q", NULL));
 }
 
 void test_selftest__quiet(void)
 {
-	cl_invoke(run("combined", "quiet", 10, "-q", NULL));
+	cl_invoke(assert_output("combined", "quiet", 10, "-q", NULL));
 }
 
 void test_selftest__tap(void)
 {
-	cl_invoke(run("combined", "tap", 10, "-t", NULL));
+	cl_invoke(assert_output("combined", "tap", 10, "-t", NULL));
 }
 
 void test_selftest__suite_names(void)
 {
-	cl_invoke(run("combined", "suite_names", 0, "-l", NULL));
+	cl_invoke(assert_output("combined", "suite_names", 0, "-l", NULL));
 }
 
 void test_selftest__summary_without_filename(void)
 {
 	struct stat st;
-	cl_invoke(run("combined", "summary_without_filename", 10, "-r", NULL));
+	cl_invoke(assert_output("combined", "summary_without_filename", 10, "-r", NULL));
 	/* The summary contains timestamps, so we cannot verify its contents. */
 	cl_must_pass(stat("summary.xml", &st));
 }
@@ -309,7 +337,7 @@ void test_selftest__summary_without_filename(void)
 void test_selftest__summary_with_filename(void)
 {
 	struct stat st;
-	cl_invoke(run("combined", "summary_with_filename", 10, "-rdifferent.xml", NULL));
+	cl_invoke(assert_output("combined", "summary_with_filename", 10, "-rdifferent.xml", NULL));
 	/* The summary contains timestamps, so we cannot verify its contents. */
 	cl_must_pass(stat("different.xml", &st));
 }
