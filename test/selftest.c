@@ -271,7 +271,7 @@ static void assert_output(const char *suite, const char *expected_output_file, i
 	char *expected_output, *output;
 	const char *args[16];
 	va_list ap;
-	int i;
+	size_t i;
 
 	va_start(ap, expected_error_code);
 	for (i = 0; ; i++) {
