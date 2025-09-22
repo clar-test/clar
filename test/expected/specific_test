@@ -3,7 +3,7 @@ Started (test status codes: OK='.' FAILURE='F' SKIPPED='S')
 F
 
   1) Failure:
-selftest::suite::bool [file:42]
+combined::bool [file:42]
   0 != value
   0 != 1
 
