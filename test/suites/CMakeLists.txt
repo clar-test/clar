@@ -1,5 +1,6 @@
 list(APPEND suites
 	"combined"
+	"pointer"
 )
 
 foreach(suite IN LISTS suites)

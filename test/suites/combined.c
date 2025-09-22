@@ -72,13 +72,6 @@ void test_combined__bool(void)
 	cl_assert_equal_b(0, value);
 }
 
-void test_combined__ptr(void)
-{
-	void *p1 = (void *)0x1, *p2 = (void *)0x2;
-	cl_assert_equal_p(p1, p1); /* pointers to same object */
-	cl_assert_equal_p(p1, p2);
-}
-
 void test_combined__multiline_description(void)
 {
 	cl_must_pass_(-1, "description line 1\ndescription line 2");

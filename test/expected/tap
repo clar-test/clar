@@ -68,17 +68,7 @@ not ok 7 - combined::bool
       line: 42
       function: 'func'
     ---
-not ok 8 - combined::ptr
-    ---
-    reason: |
-      Pointer mismatch: p1 != p2
-      0x1 != 0x2
-    at:
-      file: 'file'
-      line: 42
-      function: 'func'
-    ---
-not ok 9 - combined::multiline_description
+not ok 8 - combined::multiline_description
     ---
     reason: |
       Function call failed: -1
@@ -89,7 +79,7 @@ not ok 9 - combined::multiline_description
       line: 42
       function: 'func'
     ---
-not ok 10 - combined::null_string
+not ok 9 - combined::null_string
     ---
     reason: |
       String mismatch: "expected" != actual ("this one fails")
@@ -99,4 +89,4 @@ not ok 10 - combined::null_string
       line: 42
       function: 'func'
     ---
-1..10
+1..9
