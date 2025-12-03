@@ -1,6 +1,6 @@
 Loaded 1 suites:
 Started (test status codes: OK='.' FAILURE='F' SKIPPED='S')
-FFFFFFFFF
+FFFFFFFFFF
 
   1) Failure:
 combined::1 [file:42]
@@ -45,5 +45,10 @@ combined::multiline_description [file:42]
 combined::null_string [file:42]
   String mismatch: "expected" != actual ("this one fails")
   'expected' != NULL
+
+  10) Failure:
+combined::failf [file:42]
+  Test failed.
+  some reason: foo
 
 written summary file to summary.xml

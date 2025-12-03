@@ -83,3 +83,8 @@ void test_combined__null_string(void)
 	cl_assert_equal_s(actual, actual);
 	cl_assert_equal_s_("expected", actual, "this one fails");
 }
+
+void test_combined__failf(void)
+{
+	cl_failf("some reason: %s", "foo");
+}

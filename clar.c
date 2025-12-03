@@ -24,6 +24,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifndef va_copy
+#	ifdef __va_copy
+#		define va_copy(dst, src) __va_copy(dst, src)
+#	else
+#		define va_copy(dst, src) ((dst) = (src))
+#	endif
+#endif
+
 #if defined(__UCLIBC__) && ! defined(__UCLIBC_HAS_WCHAR__)
 	/*
 	 * uClibc can optionally be built without wchar support, in which case
@@ -702,13 +710,14 @@ void clar__skip(void)
 	abort_test();
 }
 
-void clar__fail(
+static void clar__failv(
 	const char *file,
 	const char *function,
 	size_t line,
+	int should_abort,
 	const char *error_msg,
 	const char *description,
-	int should_abort)
+	va_list args)
 {
 	struct clar_error *error;
 
@@ -728,15 +737,53 @@ void clar__fail(
 	error->line_number = _clar.invoke_line ? _clar.invoke_line : line;
 	error->error_msg = error_msg;
 
-	if (description != NULL &&
-	    (error->description = strdup(description)) == NULL)
-		clar_abort("Failed to allocate description.\n");
+	if (description != NULL) {
+		va_list args_copy;
+		int len;
+
+		va_copy(args_copy, args);
+		if ((len = p_vsnprintf(NULL, 0, description, args_copy)) < 0)
+			clar_abort("Failed to compute description.");
+		va_end(args_copy);
+
+		if ((error->description = calloc(1, len + 1)) == NULL)
+			clar_abort("Failed to allocate buffer.");
+		p_vsnprintf(error->description, len + 1, description, args);
+	}
 
 	_clar.total_errors++;
 	_clar.last_report->status = CL_TEST_FAILURE;
 
 	if (should_abort)
 		abort_test();
+}
+
+void clar__failf(
+	const char *file,
+	const char *function,
+	size_t line,
+	int should_abort,
+	const char *error_msg,
+	const char *description,
+	...)
+{
+	va_list args;
+	va_start(args, description);
+	clar__failv(file, function, line, should_abort, error_msg,
+		    description, args);
+	va_end(args);
+}
+
+void clar__fail(
+	const char *file,
+	const char *function,
+	size_t line,
+	const char *error_msg,
+	const char *description,
+	int should_abort)
+{
+	clar__failf(file, function, line, should_abort, error_msg,
+		    description ? "%s" : NULL, description);
 }
 
 void clar__assert(

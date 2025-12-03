@@ -149,6 +149,7 @@ const char *cl_fixture_basename(const char *fixture_name);
  * Forced failure/warning
  */
 #define cl_fail(desc) clar__fail(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, "Test failed.", desc, 1)
+#define cl_failf(desc,...) clar__failf(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, 1, "Test failed.", desc, __VA_ARGS__)
 #define cl_warning(desc) clar__fail(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, "Warning during test execution:", desc, 0)
 
 #define cl_skip() clar__skip()
@@ -185,6 +186,15 @@ void clar__fail(
 	const char *error,
 	const char *description,
 	int should_abort);
+
+void clar__failf(
+	const char *file,
+	const char *func,
+	size_t line,
+	int should_abort,
+	const char *error,
+	const char *description,
+	...);
 
 void clar__assert(
 	int condition,

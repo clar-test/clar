@@ -89,4 +89,14 @@ not ok 9 - combined::null_string
       line: 42
       function: 'func'
     ...
-1..9
+not ok 10 - combined::failf
+    ---
+    reason: |
+      Test failed.
+      some reason: foo
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ...
+1..10
