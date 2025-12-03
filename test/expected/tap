@@ -99,4 +99,24 @@ not ok 10 - combined::failf
       line: 42
       function: 'func'
     ...
-1..10
+not ok 11 - combined::compare_i
+    ---
+    reason: |
+      Expected comparison to hold: two < 1
+      2 >= 1
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ...
+not ok 12 - combined::compare_u
+    ---
+    reason: |
+      Expected comparison to hold: two < 1
+      2 >= 1
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ...
+1..12

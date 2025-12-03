@@ -88,3 +88,34 @@ void test_combined__failf(void)
 {
 	cl_failf("some reason: %s", "foo");
 }
+
+void test_combined__compare_i(void)
+{
+	int one = 1, two = 2;
+
+	cl_assert_equal_i(one, 1);
+	cl_assert_eq_i(one, 1);
+	cl_assert_lt_i(one, 2);
+	cl_assert_le_i(one, 2);
+	cl_assert_le_i(two, 2);
+	cl_assert_gt_i(two, 1);
+	cl_assert_ge_i(two, 2);
+	cl_assert_ge_i(3, two);
+
+	cl_assert_lt_i(two, 1); /* this one fails */
+}
+
+void test_combined__compare_u(void)
+{
+	unsigned one = 1, two = 2;
+
+	cl_assert_eq_u(one, 1);
+	cl_assert_lt_u(one, 2);
+	cl_assert_le_u(one, 2);
+	cl_assert_le_u(two, 2);
+	cl_assert_gt_u(two, 1);
+	cl_assert_ge_u(two, 2);
+	cl_assert_ge_u(3, two);
+
+	cl_assert_lt_u(two, 1); /* this one fails */
+}

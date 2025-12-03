@@ -939,6 +939,92 @@ void clar__assert_equal(
 		clar__fail(file, function, line, err, buf, should_abort);
 }
 
+void clar__assert_compare_i(
+	const char *file,
+	const char *func,
+	size_t line,
+	int should_abort,
+	enum clar_comparison cmp,
+	intmax_t value1,
+	intmax_t value2,
+	const char *error,
+	const char *description,
+	...)
+{
+	int fulfilled;
+	switch (cmp) {
+	case CLAR_COMPARISON_EQ:
+		fulfilled = value1 == value2;
+		break;
+	case CLAR_COMPARISON_LT:
+		fulfilled = value1 < value2;
+		break;
+	case CLAR_COMPARISON_LE:
+		fulfilled = value1 <= value2;
+		break;
+	case CLAR_COMPARISON_GT:
+		fulfilled = value1 > value2;
+		break;
+	case CLAR_COMPARISON_GE:
+		fulfilled = value1 >= value2;
+		break;
+	default:
+		cl_assert(0);
+		return;
+	}
+
+	if (!fulfilled) {
+		va_list args;
+		va_start(args, description);
+		clar__failv(file, func, line, should_abort, error,
+			    description, args);
+		va_end(args);
+	}
+}
+
+void clar__assert_compare_u(
+	const char *file,
+	const char *func,
+	size_t line,
+	int should_abort,
+	enum clar_comparison cmp,
+	uintmax_t value1,
+	uintmax_t value2,
+	const char *error,
+	const char *description,
+	...)
+{
+	int fulfilled;
+	switch (cmp) {
+	case CLAR_COMPARISON_EQ:
+		fulfilled = value1 == value2;
+		break;
+	case CLAR_COMPARISON_LT:
+		fulfilled = value1 < value2;
+		break;
+	case CLAR_COMPARISON_LE:
+		fulfilled = value1 <= value2;
+		break;
+	case CLAR_COMPARISON_GT:
+		fulfilled = value1 > value2;
+		break;
+	case CLAR_COMPARISON_GE:
+		fulfilled = value1 >= value2;
+		break;
+	default:
+		cl_assert(0);
+		return;
+	}
+
+	if (!fulfilled) {
+		va_list args;
+		va_start(args, description);
+		clar__failv(file, func, line, should_abort, error,
+			    description, args);
+		va_end(args);
+	}
+}
+
 void cl_set_cleanup(void (*cleanup)(void *), void *opaque)
 {
 	_clar.local_cleanup = cleanup;
