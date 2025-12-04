@@ -41,14 +41,24 @@ not ok 4 - combined::strings_with_length
 not ok 5 - combined::int
     ---
     reason: |
-      101 != value ("extra note on failing test")
+      Expected comparison to hold: 101 == value
       101 != 100
     at:
       file: 'file'
       line: 42
       function: 'func'
     ...
-not ok 6 - combined::int_fmt
+not ok 6 - combined::int_note
+    ---
+    reason: |
+      Expected comparison to hold: 101 == value
+      extra note on failing test
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ...
+not ok 7 - combined::int_fmt
     ---
     reason: |
       022 != value
@@ -58,7 +68,7 @@ not ok 6 - combined::int_fmt
       line: 42
       function: 'func'
     ...
-not ok 7 - combined::bool
+not ok 8 - combined::bool
     ---
     reason: |
       0 != value
@@ -68,7 +78,7 @@ not ok 7 - combined::bool
       line: 42
       function: 'func'
     ...
-not ok 8 - combined::multiline_description
+not ok 9 - combined::multiline_description
     ---
     reason: |
       Function call failed: -1
@@ -79,7 +89,7 @@ not ok 8 - combined::multiline_description
       line: 42
       function: 'func'
     ...
-not ok 9 - combined::null_string
+not ok 10 - combined::null_string
     ---
     reason: |
       String mismatch: "expected" != actual ("this one fails")
@@ -89,7 +99,7 @@ not ok 9 - combined::null_string
       line: 42
       function: 'func'
     ...
-not ok 10 - combined::failf
+not ok 11 - combined::failf
     ---
     reason: |
       Test failed.
@@ -99,7 +109,7 @@ not ok 10 - combined::failf
       line: 42
       function: 'func'
     ...
-not ok 11 - combined::compare_i
+not ok 12 - combined::compare_i
     ---
     reason: |
       Expected comparison to hold: two < 1
@@ -109,7 +119,7 @@ not ok 11 - combined::compare_i
       line: 42
       function: 'func'
     ...
-not ok 12 - combined::compare_i_with_format
+not ok 13 - combined::compare_i_with_format
     ---
     reason: |
       Expected comparison to hold: two < 1
@@ -119,7 +129,7 @@ not ok 12 - combined::compare_i_with_format
       line: 42
       function: 'func'
     ...
-not ok 13 - combined::compare_u
+not ok 14 - combined::compare_u
     ---
     reason: |
       Expected comparison to hold: two < 1
@@ -129,7 +139,7 @@ not ok 13 - combined::compare_u
       line: 42
       function: 'func'
     ...
-not ok 14 - combined::compare_u_with_format
+not ok 15 - combined::compare_u_with_format
     ---
     reason: |
       Expected comparison to hold: two < 1
@@ -139,4 +149,4 @@ not ok 14 - combined::compare_u_with_format
       line: 42
       function: 'func'
     ...
-1..14
+1..15

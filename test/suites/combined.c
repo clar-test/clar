@@ -55,7 +55,12 @@ void test_combined__strings_with_length(void)
 void test_combined__int(void)
 {
 	int value = 100;
-	cl_assert_equal_i(100, value);
+	cl_assert_equal_i(101, value);
+}
+
+void test_combined__int_note(void)
+{
+	int value = 100;
 	cl_assert_equal_i_(101, value, "extra note on failing test");
 }
 
@@ -94,8 +99,8 @@ void test_combined__compare_i(void)
 	int one = 1, two = 2;
 
 	cl_assert_equal_i(one, 1);
-	cl_assert_eq_i(one, 1);
-	cl_assert_eq_i_(one, 1, "format");
+	cl_assert_equal_i(one, 1);
+	cl_assert_equal_i_(one, 1, "format");
 	cl_assert_lt_i(one, 2);
 	cl_assert_lt_i_(one, 2, "format");
 	cl_assert_le_i(one, 2);
@@ -120,8 +125,8 @@ void test_combined__compare_u(void)
 {
 	unsigned one = 1, two = 2;
 
-	cl_assert_eq_u(one, 1);
-	cl_assert_eq_u_(one, 1, "format");
+	cl_assert_equal_u(one, 1);
+	cl_assert_equal_u_(one, 1, "format");
 	cl_assert_lt_u(one, 2);
 	cl_assert_lt_u_(one, 2, "format");
 	cl_assert_le_u(one, 2);
