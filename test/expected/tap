@@ -109,7 +109,17 @@ not ok 11 - combined::compare_i
       line: 42
       function: 'func'
     ...
-not ok 12 - combined::compare_u
+not ok 12 - combined::compare_i_with_format
+    ---
+    reason: |
+      Expected comparison to hold: two < 1
+      foo: bar
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ...
+not ok 13 - combined::compare_u
     ---
     reason: |
       Expected comparison to hold: two < 1
@@ -119,4 +129,14 @@ not ok 12 - combined::compare_u
       line: 42
       function: 'func'
     ...
-1..12
+not ok 14 - combined::compare_u_with_format
+    ---
+    reason: |
+      Expected comparison to hold: two < 1
+      foo: bar
+    at:
+      file: 'file'
+      line: 42
+      function: 'func'
+    ...
+1..14

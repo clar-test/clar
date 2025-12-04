@@ -53,7 +53,17 @@ combined::compare_i [file:42]
   2 >= 1
 
   12) Failure:
+combined::compare_i_with_format [file:42]
+  Expected comparison to hold: two < 1
+  foo: bar
+
+  13) Failure:
 combined::compare_u [file:42]
   Expected comparison to hold: two < 1
   2 >= 1
+
+  14) Failure:
+combined::compare_u_with_format [file:42]
+  Expected comparison to hold: two < 1
+  foo: bar
 
