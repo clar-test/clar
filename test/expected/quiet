@@ -42,3 +42,18 @@ combined::null_string [file:42]
   String mismatch: "expected" != actual ("this one fails")
   'expected' != NULL
 
+  10) Failure:
+combined::failf [file:42]
+  Test failed.
+  some reason: foo
+
+  11) Failure:
+combined::compare_i [file:42]
+  Expected comparison to hold: two < 1
+  2 >= 1
+
+  12) Failure:
+combined::compare_u [file:42]
+  Expected comparison to hold: two < 1
+  2 >= 1
+
