@@ -28,7 +28,7 @@ combined::int_note [file:42]
 
   7) Failure:
 combined::int_fmt [file:42]
-  022 != value
+  Expected comparison to hold: 022 == value
   0022 != 0144
 
   8) Failure:

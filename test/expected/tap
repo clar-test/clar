@@ -61,7 +61,7 @@ not ok 6 - combined::int_note
 not ok 7 - combined::int_fmt
     ---
     reason: |
-      022 != value
+      Expected comparison to hold: 022 == value
       0022 != 0144
     at:
       file: 'file'
