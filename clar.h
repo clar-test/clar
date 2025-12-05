@@ -172,30 +172,40 @@ const char *cl_fixture_basename(const char *fixture_name);
 
 #define cl_assert_compare_i_(i1, i2, cmp, error, ...) clar__assert_compare_i(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, 1, cmp, \
 									     (i1), (i2), "Expected comparison to hold: " error, __VA_ARGS__)
+#define cl_assert_compare_i(i1, i2, cmp, error, fmt) do { \
+	intmax_t v1 = (i1), v2 = (i2); \
+	clar__assert_compare_i(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, 1, cmp, \
+			       v1, v2, "Expected comparison to hold: " error, fmt, v1, v2); \
+} while (0)
 #define cl_assert_equal_i_(i1, i2, ...)    cl_assert_compare_i_(i1, i2, CLAR_COMPARISON_EQ, #i1 " == " #i2, __VA_ARGS__)
-#define cl_assert_equal_i(i1,i2) cl_assert_equal_i_(i1,i2,"%"PRIdMAX " != %"PRIdMAX,(intmax_t)(i1),(intmax_t)(i2))
+#define cl_assert_equal_i(i1, i2)          cl_assert_compare_i (i1, i2, CLAR_COMPARISON_EQ, #i1 " == " #i2, "%"PRIdMAX " != %"PRIdMAX)
 #define cl_assert_equal_i_fmt(i1, i2, fmt) cl_assert_compare_i_(i1, i2, CLAR_COMPARISON_EQ, #i1 " == " #i2,  fmt " != " fmt, (int)(i1), (int)(i2))
 #define cl_assert_lt_i_(i1, i2, ...) cl_assert_compare_i_(i1, i2, CLAR_COMPARISON_LT, #i1 " < " #i2, __VA_ARGS__)
-#define cl_assert_lt_i(i1,i2) cl_assert_lt_i_(i1,i2,"%"PRIdMAX " >= %"PRIdMAX,(intmax_t)(i1),(intmax_t)(i2))
+#define cl_assert_lt_i(i1, i2)       cl_assert_compare_i (i1, i2, CLAR_COMPARISON_LT, #i1 " < " #i2, "%"PRIdMAX " >= %"PRIdMAX)
 #define cl_assert_le_i_(i1, i2, ...) cl_assert_compare_i_(i1, i2, CLAR_COMPARISON_LE, #i1 " <= " #i2, __VA_ARGS__)
-#define cl_assert_le_i(i1,i2) cl_assert_le_i_(i1,i2,"%"PRIdMAX " > %"PRIdMAX,(intmax_t)(i1),(intmax_t)(i2))
+#define cl_assert_le_i(i1, i2)       cl_assert_compare_i (i1, i2, CLAR_COMPARISON_LE, #i1 " <= " #i2, "%"PRIdMAX " > %"PRIdMAX)
 #define cl_assert_gt_i_(i1, i2, ...) cl_assert_compare_i_(i1, i2, CLAR_COMPARISON_GT, #i1 " > " #i2, __VA_ARGS__)
-#define cl_assert_gt_i(i1,i2) cl_assert_gt_i_(i1,i2,"%"PRIdMAX " <= %"PRIdMAX,(intmax_t)(i1),(intmax_t)(i2))
+#define cl_assert_gt_i(i1, i2)       cl_assert_compare_i (i1, i2, CLAR_COMPARISON_GT, #i1 " > " #i2, "%"PRIdMAX " <= %"PRIdMAX)
 #define cl_assert_ge_i_(i1, i2, ...) cl_assert_compare_i_(i1, i2, CLAR_COMPARISON_GE, #i1 " >= " #i2, __VA_ARGS__)
-#define cl_assert_ge_i(i1,i2) cl_assert_ge_i_(i1,i2,"%"PRIdMAX " < %"PRIdMAX,(intmax_t)(i1),(intmax_t)(i2))
+#define cl_assert_ge_i(i1, i2)       cl_assert_compare_i (i1, i2, CLAR_COMPARISON_GE, #i1 " >= " #i2, "%"PRIdMAX " < %"PRIdMAX)
 
 #define cl_assert_compare_u_(u1, u2, cmp, error, ...) clar__assert_compare_u(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, 1, cmp, \
 									     (u1), (u2), "Expected comparison to hold: " error, __VA_ARGS__)
+#define cl_assert_compare_u(u1, u2, cmp, error, fmt) do { \
+	uintmax_t v1 = (u1), v2 = (u2); \
+	clar__assert_compare_u(CLAR_CURRENT_FILE, CLAR_CURRENT_FUNC, CLAR_CURRENT_LINE, 1, cmp, \
+			       v1, v2, "Expected comparison to hold: " error, fmt, v1, v2); \
+} while (0)
 #define cl_assert_equal_u_(u1, u2, ...) cl_assert_compare_u_(u1, u2, CLAR_COMPARISON_EQ, #u1 " == " #u2, __VA_ARGS__)
-#define cl_assert_equal_u(u1,u2) cl_assert_equal_u_(u1,u2,"%"PRIuMAX " != %"PRIuMAX,(uintmax_t)(u1),(uintmax_t)(u2))
+#define cl_assert_equal_u(u1, u2)       cl_assert_compare_u (u1, u2, CLAR_COMPARISON_EQ, #u1 " == " #u2, "%"PRIuMAX " != %"PRIuMAX)
 #define cl_assert_lt_u_(u1, u2, ...) cl_assert_compare_u_(u1, u2, CLAR_COMPARISON_LT, #u1 " < " #u2, __VA_ARGS__)
-#define cl_assert_lt_u(u1,u2) cl_assert_lt_u_(u1,u2,"%"PRIuMAX " >= %"PRIuMAX,(uintmax_t)(u1),(uintmax_t)(u2))
+#define cl_assert_lt_u(u1, u2)       cl_assert_compare_u (u1, u2, CLAR_COMPARISON_LT, #u1 " < " #u2, "%"PRIuMAX " >= %"PRIuMAX)
 #define cl_assert_le_u_(u1, u2, ...) cl_assert_compare_u_(u1, u2, CLAR_COMPARISON_LE, #u1 " <= " #u2, __VA_ARGS__)
-#define cl_assert_le_u(u1,u2) cl_assert_le_u_(u1,u2,"%"PRIuMAX " > %"PRIuMAX,(uintmax_t)(u1),(uintmax_t)(u2))
+#define cl_assert_le_u(u1, u2)       cl_assert_compare_u (u1, u2, CLAR_COMPARISON_LE, #u1 " <= " #u2, "%"PRIuMAX " > %"PRIuMAX)
 #define cl_assert_gt_u_(u1, u2, ...) cl_assert_compare_u_(u1, u2, CLAR_COMPARISON_GT, #u1 " > " #u2, __VA_ARGS__)
-#define cl_assert_gt_u(u1,u2) cl_assert_gt_u_(u1,u2,"%"PRIuMAX " <= %"PRIuMAX,(uintmax_t)(u1),(uintmax_t)(u2))
+#define cl_assert_gt_u(u1, u2)       cl_assert_compare_u (u1, u2, CLAR_COMPARISON_GT, #u1 " > " #u2, "%"PRIuMAX " <= %"PRIuMAX)
 #define cl_assert_ge_u_(u1, u2, ...) cl_assert_compare_u_(u1, u2, CLAR_COMPARISON_GE, #u1 " >= " #u2, __VA_ARGS__)
-#define cl_assert_ge_u(u1,u2) cl_assert_ge_u_(u1,u2,"%"PRIuMAX " < %"PRIuMAX,(uintmax_t)(u1),(uintmax_t)(u2))
+#define cl_assert_ge_u(u1, u2)       cl_assert_compare_u (u1, u2, CLAR_COMPARISON_GE, #u1 " >= " #u2, "%"PRIuMAX " < %"PRIuMAX)
 
 #define cl_assert_equal_b(b1,b2) clar__assert_equal(CLAR_CURRENT_FILE,CLAR_CURRENT_FUNC,CLAR_CURRENT_LINE,#b1 " != " #b2, 1, "%d", (int)((b1) != 0),(int)((b2) != 0))
 
