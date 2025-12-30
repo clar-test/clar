@@ -224,7 +224,9 @@ class TestSuite(object):
 
     def write(self):
         output = os.path.join(self.output, 'clar.suite')
-        os.makedirs(self.output, exist_ok=True)
+
+        if not os.path.exists(self.output):
+            os.makedirs(self.output, exist_ok=True)
 
         if not self.should_generate(output):
             return False
