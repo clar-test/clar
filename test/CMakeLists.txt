@@ -36,7 +36,7 @@ target_include_directories(selftest PRIVATE
 	"${CMAKE_SOURCE_DIR}"
 	"${CMAKE_CURRENT_BINARY_DIR}"
 )
-target_link_libraries(selftest clar)
+target_link_libraries(selftest clar ${CLAR_LIBRARIES})
 
 add_test(NAME build_selftest
 	COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --target selftest

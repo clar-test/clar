@@ -27,6 +27,10 @@ set_target_properties(clar PROPERTIES
 	C_EXTENSIONS OFF
 )
 
+if(NOT WIN32)
+	set(CLAR_LIBRARIES m)
+endif()
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	include(CTest)
 	if(BUILD_TESTING)
