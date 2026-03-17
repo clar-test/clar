@@ -324,9 +324,10 @@ About Clar
 
 Clar was originally written by [Vicent Martí](https://github.com/vmg),
 to replace the old testing framework in [libgit2][libgit2]. It is
-currently maintained by [Edward Thomson](https://github.com/ethomson),
-and used by the [libgit2][libgit2] and [git][git] projects, amongst
-others.
+currently maintained on [GitHub][github] by
+[Edward Thomson](https://github.com/ethomson), and used by the
+[libgit2][libgit2] and [git][git] projects, amongst others.
 
+[github]: https://github.com/clar-test/clar
 [libgit2]: https://github.com/libgit2/libgit2
 [git]: https://github.com/git/git
