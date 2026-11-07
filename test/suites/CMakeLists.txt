@@ -44,7 +44,7 @@ foreach(suite IN LISTS suites)
 		"${CMAKE_SOURCE_DIR}"
 		"${CMAKE_CURRENT_BINARY_DIR}/${suite}"
 	)
-	target_link_libraries(${suite}_suite clar)
+	target_link_libraries(${suite}_suite clar ${CLAR_LIBRARIES})
 
 	add_test(NAME build_${suite}_suite
 		COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --target selftest

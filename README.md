@@ -1,17 +1,13 @@
 Come out and Clar
 =================
 
-In Catalan, "clar" means clear, easy to perceive.  Using clar will make it
-easy to test and make clear the quality of your code.
+Clar is a minimal C unit testing and benchmarking framework. It
+provides a simple mechanism for writing tests and asserting
+postconditions, while providing support for TAP and JUnit style
+outputs.
 
-> _Historical note_
->
-> Originally the clar project was named "clay" because the word "test" has its
-> roots in the latin word *"testum"*, meaning "earthen pot", and *"testa"*,
-> meaning "piece of burned clay"?
->
-> This is because historically, testing implied melting metal in a pot to
-> check its quality.  Clay is what tests are made of.
+In Catalan, "clar" means clear, easy to perceive.  Using Clar will make it
+easy to test and make clear the quality of your code.
 
 ## Quick Usage Overview
 
@@ -19,9 +15,7 @@ Clar is a minimal C unit testing framework. It's been written to replace the
 old framework in [libgit2][libgit2], but it's both very versatile and
 straightforward to use.
 
-Can you count to funk?
-
-- **Zero: Initialize test directory**
+1. **Initialize test directory**
 
     ~~~~ sh
     $ mkdir tests
@@ -29,7 +23,7 @@ Can you count to funk?
     $ cp $CLAR_ROOT/example/*.c tests
     ~~~~
 
-- **One: Write some tests**
+2. **Write some tests**
 
     File: tests/adding.c:
 
@@ -59,7 +53,7 @@ Can you count to funk?
     }
     ~~~~~
 
-- **Two: Build the test executable**
+3. **Build the test executable**
 
     ~~~~ sh
     $ cd tests
@@ -68,7 +62,7 @@ Can you count to funk?
     $ gcc -I. clar.c main.c adding.c -o testit
     ~~~~
 
-- **Funk: Funk it.**
+4. **Run the tests**
 
     ~~~~ sh
     $ ./testit
@@ -318,6 +312,92 @@ void test_example__a_test_with_auxiliary_methods(void)
     cl_invoke(check_string("bar"));
 }
 ~~~~
+
+## Benchmarks
+
+The clar mixer (`generate.py`) and runner can also be used to support
+simple benchmark capabilities. When running in benchmark mode, Clar
+will run each test multiple times in succession, using a high-resolution
+platform timer to measure the elapsed time of each run.
+
+By default, Clar will run each test repeatedly for 3 seconds (with
+a minimum of 10 runs), but you can define the explicit number of
+runs for each test in the definition.
+
+By default, Clar will run the initialization and cleanup functions
+before _each_ test run. This allows for consistent setup and teardown
+behavior, and predictability with existing test setups. However, you
+can avoid this additional overhead by defining a _reset_ function.
+This will be called between test runs instead of the cleanup and
+re-initialization; in this case, initialization will occur only
+before all test runs, and cleanup will be performed only when all
+test runs are complete.
+
+To configure a benchmark application instead of a test application:
+
+1. **Set clar into benchmark mode in your main function**
+
+    ~~~~ c
+    int main(int argc, char *argv[])
+    {
+        clar_test_set_mode(CL_TEST_BENCHMARK);
+        clar_test_init(argc, argv);
+        res = clar_test_run();
+        clar_test_shutdown();
+        return res;
+    }
+    ~~~~
+
+2. **Optionally, set up your initialization, cleanup, and reset
+   functions**
+
+    ~~~~ c
+    void test_foo__initialize(void)
+    {
+        global_data = malloc(1024 * 1024 * 1024);
+        memset(global_data, 0, 1024 * 1024 * 1024);
+    }
+
+    void test_foo__reset(void)
+    {
+        memset(global_data, 0, 1024 * 1024 * 1024);
+    }
+
+    void test_foo__cleanup(void)
+    {
+        global_data = malloc(1024 * 1024 * 1024);
+    }
+    ~~~~
+
+3. **Optionally, configure tests with a specific run number**
+
+    ~~~~ c
+    /* Run this test 500 times */
+    void test_foo__bar(void)
+    /* [clar]:runs=500 */
+    {
+        bar();
+    }
+    ~~~~
+
+3. **Run the benchmarks**
+
+   When running in benchmark mode, you'll see timings output; if you
+   write a summary file, it will be a JSON file that contains the
+   time information.
+
+    ~~~~ sh
+    $ ./benchmarks -r/path/to/results.json
+    Started benchmarks (mean time ± stddev / min time … max time):
+
+    foo::bar: 24.75 ms ± 1.214 ms / range: 24.41 ms … 38.06 ms  (500 runs)
+    foo::baz: 24.67 ms ± 248.2 μs / range: 24.41 ms … 25.41 ms  (478 runs)
+    foo::qux: 25.98 ms ± 333.0 μs / range: 25.64 ms … 26.82 ms  (112 runs)
+    ~~~~
+
+Note: you can change the prefix of the test function names from `test_`
+to something of your choice by using the `--prefix=...` option for
+the `generate.py` mixer script.
 
 About Clar
 ==========
